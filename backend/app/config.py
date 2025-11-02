@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     backend_host: str = "0.0.0.0"
     backend_port: int = 8000
     # Default CORS origins for development - override via BACKEND_CORS_ORIGINS env var
-    backend_cors_origins: str = "http://localhost:3000,http://localhost:5173,http://192.168.50.201:3000"
+    backend_cors_origins: str = "http://localhost:3000,http://localhost:5173,http://192.168.50.201:3000,http://docker-1:3000"
 
     # AI Service
     ai_service_url: str = "http://localhost:8001"
