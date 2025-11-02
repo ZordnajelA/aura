@@ -22,13 +22,14 @@ Aura supports multiple LLM providers. Configure your preferred provider in `.env
 ```bash
 DEFAULT_LLM_PROVIDER=gemini
 GOOGLE_API_KEY=your-google-api-key
-GEMINI_MODEL=gemini-2.0-flash-exp  # Latest and recommended
+GEMINI_MODEL=gemini-2.5-flash  # Latest and recommended
 ```
 
 **Get your API key**: https://makersuite.google.com/app/apikey
 
 **Available models**:
-- `gemini-2.0-flash-exp` - Latest, fastest, most capable (recommended)
+- `gemini-2.5-flash` - Latest, fastest, most capable (recommended)
+- `gemini-2.0-flash-exp` - Experimental 2.0 version
 - `gemini-1.5-flash` - Fast, cost-effective
 - `gemini-1.5-pro` - High quality, multimodal
 - `gemini-pro` - Legacy model
@@ -275,8 +276,8 @@ For limited memory environments:
 # Use smaller Whisper model
 WHISPER_MODEL=tiny
 
-# Gemini 2.0 Flash is already highly optimized
-GEMINI_MODEL=gemini-2.0-flash-exp
+# Gemini 2.5 Flash is already highly optimized
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### Processing Speed
@@ -286,20 +287,20 @@ For faster processing:
 ```bash
 # Use fastest models
 WHISPER_MODEL=tiny
-GEMINI_MODEL=gemini-2.0-flash-exp  # Fastest and most capable
+GEMINI_MODEL=gemini-2.5-flash  # Fastest and most capable
 ```
 
 ### Cost Optimization
 
 **Free tier options**:
-- Google Gemini: Generous free tier (1500 requests/day for Gemini 2.0 Flash)
+- Google Gemini: Generous free tier (1500 requests/day for Gemini 2.5 Flash)
 - OpenAI: Requires payment, but GPT-3.5-turbo is inexpensive
 - Anthropic: Requires payment
 
 **Recommended for budget**:
 ```bash
 DEFAULT_LLM_PROVIDER=gemini
-GEMINI_MODEL=gemini-2.0-flash-exp  # Free tier available
+GEMINI_MODEL=gemini-2.5-flash  # Free tier available
 ```
 
 ## Troubleshooting

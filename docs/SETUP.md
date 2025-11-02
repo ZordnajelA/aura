@@ -365,7 +365,7 @@ See `.env.example` for full list of available environment variables.
 - `REDIS_URL` (for task queue)
 - `SMTP_*` (for email notifications)
 - `WHISPER_MODEL` (audio transcription model size)
-- `GEMINI_MODEL` (gemini-1.5-flash or gemini-1.5-pro)
+- `GEMINI_MODEL` (gemini-2.5-flash, gemini-2.0-flash-exp, gemini-1.5-flash, or gemini-1.5-pro)
 
 ## Next Steps
 
