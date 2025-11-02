@@ -17,7 +17,7 @@ services:
     networks:
       - aura-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aura_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aura_user} -d ${POSTGRES_DB:-aura_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
