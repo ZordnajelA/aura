@@ -13,8 +13,8 @@ from .database import init_db
 from . import models  # Import models to register them with SQLAlchemy
 
 # Import routers
-from .api import capture
-# from .api import auth, notes, daily_notes, media, para, links, chat
+from .api import capture, auth
+# from .api import notes, daily_notes, media, para, links, chat
 
 app = FastAPI(
     title=settings.app_name,
@@ -93,7 +93,7 @@ async def health_check():
 
 # Include API routers
 app.include_router(capture.router, prefix="/api/capture", tags=["Capture"])
-# app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 # app.include_router(notes.router, prefix="/api/notes", tags=["Notes"])
 # app.include_router(daily_notes.router, prefix="/api/daily", tags=["Daily Notes"])
 # app.include_router(media.router, prefix="/api/media", tags=["Media"])

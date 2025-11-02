@@ -158,7 +158,7 @@ Once the backend is running, visit http://localhost:8000/docs for interactive AP
 
 ### Phase 1: MVP (Current)
 - [x] Project structure and setup
-- [ ] User authentication
+- [x] User authentication
 - [ ] Basic note creation
 - [ ] Daily notes interface
 - [ ] PARA basic structure
