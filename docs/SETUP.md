@@ -31,14 +31,25 @@ cp .env.example .env
 Edit `.env` and add your API keys:
 
 ```bash
-# Required for AI processing
-OPENAI_API_KEY=sk-your-openai-key
-# OR
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+# Required for AI processing (choose at least one)
+# Recommended: Google Gemini (has generous free tier)
+GOOGLE_API_KEY=your-google-api-key
+
+# Or use alternative providers:
+# OPENAI_API_KEY=sk-your-openai-key
+# ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+
+# Select your preferred provider
+DEFAULT_LLM_PROVIDER=gemini  # Options: gemini, openai, anthropic
 
 # Update JWT secret for production
 JWT_SECRET_KEY=your-super-secret-key-change-this
 ```
+
+**Getting API Keys**:
+- **Google Gemini**: https://makersuite.google.com/app/apikey (Free tier: 1500 requests/day)
+- **OpenAI**: https://platform.openai.com/api-keys (Paid service)
+- **Anthropic**: https://console.anthropic.com/ (Paid service)
 
 ### 3. Start All Services
 
@@ -347,12 +358,14 @@ See `.env.example` for full list of available environment variables.
 **Required**:
 - `DATABASE_URL`
 - `JWT_SECRET_KEY`
-- `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
+- `GOOGLE_API_KEY` (recommended) or `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
+- `DEFAULT_LLM_PROVIDER` (gemini, openai, or anthropic)
 
 **Optional**:
 - `REDIS_URL` (for task queue)
 - `SMTP_*` (for email notifications)
 - `WHISPER_MODEL` (audio transcription model size)
+- `GEMINI_MODEL` (gemini-1.5-flash or gemini-1.5-pro)
 
 ## Next Steps
 

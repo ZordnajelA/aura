@@ -14,14 +14,18 @@ class Settings(BaseSettings):
         case_sensitive=False
     )
 
-    # AI API Keys
-    openai_api_key: str | None = None
-    anthropic_api_key: str | None = None
+    # AI API Keys (provide at least one)
+    google_api_key: str | None = None       # Primary: Gemini API
+    openai_api_key: str | None = None       # Optional: OpenAI
+    anthropic_api_key: str | None = None    # Optional: Anthropic
 
     # Model configuration
-    default_llm_provider: str = "openai"
+    default_llm_provider: str = "gemini"    # Options: gemini, openai, anthropic
+
+    # Provider-specific models
+    gemini_model: str = "gemini-1.5-flash"  # Options: gemini-1.5-pro, gemini-1.5-flash
     openai_model: str = "gpt-4-turbo-preview"
-    anthropic_model: str = "claude-3-sonnet-20240229"
+    anthropic_model: str = "claude-3-5-sonnet-20241022"
 
     # Audio settings
     whisper_model: str = "base"

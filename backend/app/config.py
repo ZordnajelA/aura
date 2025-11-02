@@ -38,10 +38,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
-    # AI API Keys
-    openai_api_key: str | None = None
-    anthropic_api_key: str | None = None
-    default_llm_provider: str = "openai"
+    # AI API Keys (provide at least one)
+    google_api_key: str | None = None       # Primary: Gemini API
+    openai_api_key: str | None = None       # Optional: OpenAI
+    anthropic_api_key: str | None = None    # Optional: Anthropic
+    default_llm_provider: str = "gemini"    # Options: gemini, openai, anthropic
 
     # Media Processing
     upload_dir: str = "/app/uploads"

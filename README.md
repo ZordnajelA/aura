@@ -21,8 +21,10 @@
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS
 - **Backend API**: FastAPI + Python 3.11+
 - **Database**: PostgreSQL 15+
-- **AI Service**: Python (FastAPI) with LLM integration
-- **Media Processing**: librosa, Pillow, pypdf, python-docx
+- **AI Service**: Python (FastAPI) with multi-provider LLM support
+  - **Primary**: Google Gemini API (recommended)
+  - **Optional**: OpenAI GPT, Anthropic Claude
+- **Media Processing**: OpenAI Whisper, Tesseract OCR, librosa, Pillow, pypdf
 - **ORM**: SQLAlchemy
 - **Real-time**: WebSockets for chat interface
 
@@ -137,9 +139,16 @@ npm test
 See `.env.example` for required environment variables. Key variables include:
 
 - `DATABASE_URL`: PostgreSQL connection string
-- `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`: For AI processing
+- `GOOGLE_API_KEY`: For AI processing with Gemini (recommended)
+  - Alternatives: `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
+- `DEFAULT_LLM_PROVIDER`: AI provider to use (gemini, openai, or anthropic)
 - `JWT_SECRET_KEY`: For authentication
 - `UPLOAD_DIR`: Media file storage location
+
+**Getting AI API Keys**:
+- **Google Gemini** (Free tier available): https://makersuite.google.com/app/apikey
+- **OpenAI**: https://platform.openai.com/api-keys
+- **Anthropic**: https://console.anthropic.com/
 
 ## 📖 API Documentation
 
