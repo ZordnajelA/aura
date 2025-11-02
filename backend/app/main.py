@@ -2,9 +2,10 @@
 Main FastAPI application entry point
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 import os
 
 from .config import settings
@@ -23,13 +24,27 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS middleware
+# Debug middleware to log CORS requests
+@app.middleware("http")
+async def log_cors_requests(request: Request, call_next):
+    """Log CORS-related information for debugging"""
+    origin = request.headers.get("origin")
+    if request.method == "OPTIONS":
+        print(f"🔍 CORS Preflight: {request.method} {request.url.path}")
+        print(f"   Origin: {origin}")
+        print(f"   Allowed Origins: {settings.cors_origins}")
+
+    response = await call_next(request)
+    return response
+
+# CORS middleware - must be added AFTER custom middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Create upload directory if it doesn't exist
