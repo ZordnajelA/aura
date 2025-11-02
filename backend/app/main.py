@@ -47,6 +47,7 @@ async def startup_event():
     print(f"🚀 {settings.app_name} backend starting...")
     print(f"📝 Environment: {settings.environment}")
     print(f"🔗 API Documentation: http://{settings.backend_host}:{settings.backend_port}/docs")
+    print(f"🌐 CORS Origins: {settings.cors_origins}")
 
 
 @app.on_event("shutdown")
