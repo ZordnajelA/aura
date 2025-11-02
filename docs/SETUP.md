@@ -28,7 +28,26 @@ cd aura
 cp .env.example .env
 ```
 
-Edit `.env` and add your API keys:
+Edit `.env` and configure the following:
+
+**IMPORTANT - Server Domain Configuration**:
+
+Set `SERVER_DOMAIN` to match how you access the application:
+
+```bash
+# If accessing via hostname (e.g., http://docker-1:3000)
+SERVER_DOMAIN=docker-1
+
+# If accessing via IP address (e.g., http://192.168.1.100:3000)
+SERVER_DOMAIN=192.168.1.100
+
+# If accessing via localhost (e.g., http://localhost:3000)
+SERVER_DOMAIN=localhost  # This is the default
+```
+
+**Why this matters**: The backend automatically configures CORS (Cross-Origin Resource Sharing) based on `SERVER_DOMAIN`. If you access the frontend at `http://docker-1:3000` but `SERVER_DOMAIN=localhost`, you'll get CORS errors when trying to authenticate.
+
+**Add your API keys**:
 
 ```bash
 # Required for AI processing (choose at least one)
@@ -320,6 +339,30 @@ WHISPER_MODEL=tiny  # Options: tiny, base, small, medium, large
 1. Check CORS settings in `backend/app/config.py`
 2. Verify `VITE_API_URL` in frontend `.env.local`
 3. Check network tab in browser dev tools for errors
+
+### CORS Errors (Access-Control-Allow-Origin)
+
+If you see CORS errors like "No 'Access-Control-Allow-Origin' header is present":
+
+**Root Cause**: `SERVER_DOMAIN` in `.env` doesn't match how you're accessing the app.
+
+**Solution**:
+1. Identify how you access the frontend (check your browser's address bar):
+   - `http://localhost:3000` → Set `SERVER_DOMAIN=localhost`
+   - `http://docker-1:3000` → Set `SERVER_DOMAIN=docker-1`
+   - `http://192.168.1.100:3000` → Set `SERVER_DOMAIN=192.168.1.100`
+
+2. Update `.env`:
+   ```bash
+   SERVER_DOMAIN=docker-1  # Replace with your actual hostname/IP
+   ```
+
+3. Restart the backend to apply changes:
+   ```bash
+   docker-compose restart backend
+   ```
+
+4. Clear browser cache and try again
 
 ## IDE Setup
 
