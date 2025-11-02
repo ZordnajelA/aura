@@ -1,6 +1,22 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+// Dynamically construct API URL based on current hostname
+// This allows the app to work with localhost, IP addresses, or domain names
+const getApiUrl = (): string => {
+  // Use environment variable if provided (for production deployments)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+
+  // In development, construct URL using current hostname
+  const protocol = window.location.protocol // 'http:' or 'https:'
+  const hostname = window.location.hostname // 'localhost', '192.168.50.201', or domain
+  const port = 8000 // Backend port
+
+  return `${protocol}//${hostname}:${port}/api`
+}
+
+const API_URL = getApiUrl()
 
 export const api = axios.create({
   baseURL: API_URL,
