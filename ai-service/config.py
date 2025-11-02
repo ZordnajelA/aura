@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     default_llm_provider: str = "gemini"    # Options: gemini, openai, anthropic
 
     # Provider-specific models
-    gemini_model: str = "gemini-1.5-flash"  # Options: gemini-1.5-pro, gemini-1.5-flash
+    gemini_model: str = "gemini-2.0-flash-exp"  # Options: gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash
     openai_model: str = "gpt-4-turbo-preview"
     anthropic_model: str = "claude-3-5-sonnet-20241022"
 
