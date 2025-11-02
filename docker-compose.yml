@@ -45,12 +45,36 @@ services:
       dockerfile: Dockerfile
     container_name: aura-backend
     environment:
+      # Application
+      APP_NAME: ${APP_NAME:-Aura}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+
+      # Domain Configuration
+      SERVER_DOMAIN: ${SERVER_DOMAIN:-localhost}
+      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+
+      # Backend API
+      BACKEND_HOST: ${BACKEND_HOST:-0.0.0.0}
+      BACKEND_PORT: ${BACKEND_PORT:-8000}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-}
+
+      # Database
       DATABASE_URL: ${DATABASE_URL}
+
+      # Authentication
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+      # AI APIs
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-gemini}
+
+      # Services
       AI_SERVICE_URL: ${AI_SERVICE_URL}
       REDIS_URL: ${REDIS_URL}
+
+      # Media
       UPLOAD_DIR: ${UPLOAD_DIR}
     ports:
       - "8000:8000"
