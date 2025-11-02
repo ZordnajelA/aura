@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: pgvector/pgvector:pg15-alpine
+    image: pgvector/pgvector:pg15
     container_name: aura-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-aura_user}
