@@ -24,11 +24,19 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql://aura_user:aura_password@localhost:5432/aura_db"
 
+    # Server Domain/Hostname Configuration
+    # Set this to your server's hostname, IP address, or domain name
+    # Examples: "localhost", "192.168.50.201", "docker-1", "yourdomain.com"
+    server_domain: str = "localhost"
+
+    # Frontend Port (used for constructing CORS origins)
+    frontend_port: int = 3000
+
     # Backend API
     backend_host: str = "0.0.0.0"
     backend_port: int = 8000
-    # Default CORS origins for development - override via BACKEND_CORS_ORIGINS env var
-    backend_cors_origins: str = "http://localhost:3000,http://localhost:5173,http://192.168.50.201:3000"
+    # Optional: Override CORS origins completely. If not set, will be auto-generated from server_domain
+    backend_cors_origins: str | None = None
 
     # AI Service
     ai_service_url: str = "http://localhost:8001"
@@ -64,8 +72,33 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> List[str]:
-        """Parse CORS origins from comma-separated string"""
-        return [origin.strip() for origin in self.backend_cors_origins.split(",")]
+        """
+        Generate CORS origins automatically based on server_domain,
+        or use manually specified BACKEND_CORS_ORIGINS if provided
+        """
+        if self.backend_cors_origins:
+            # Use manually specified origins
+            return [origin.strip() for origin in self.backend_cors_origins.split(",")]
+
+        # Auto-generate CORS origins based on server_domain
+        origins = []
+
+        # Always include localhost for local development
+        origins.extend([
+            "http://localhost:3000",
+            "http://localhost:5173",  # Vite dev server default
+        ])
+
+        # Add the configured server domain if it's not localhost
+        if self.server_domain not in ["localhost", "127.0.0.1"]:
+            protocol = "https" if self.environment == "production" else "http"
+            origins.append(f"{protocol}://{self.server_domain}:{self.frontend_port}")
+
+            # Also add port 5173 for Vite dev server
+            if self.environment == "development":
+                origins.append(f"{protocol}://{self.server_domain}:5173")
+
+        return origins
 
     @property
     def allowed_extensions_list(self) -> List[str]:
