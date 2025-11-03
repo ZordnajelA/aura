@@ -21,7 +21,14 @@ export interface DailyNote {
   userId: string
   date: string
   content: string
-  linkedNotes: Note[]
+  linkedNoteIds?: string[]
+}
+
+export interface DailyNoteLink {
+  id: string
+  dailyNoteId: string
+  noteId: string
+  createdAt: string
 }
 
 export interface Area {

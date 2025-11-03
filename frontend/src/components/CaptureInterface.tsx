@@ -1,12 +1,14 @@
 import { useState, useRef } from 'react'
-import { Paperclip, Send } from 'lucide-react'
+import { Paperclip, Send, Link as LinkIcon } from 'lucide-react'
 import notesService from '../services/notes'
+import dailyNotesService from '../services/daily_notes'
 
 export default function CaptureInterface() {
   const [input, setInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [autoLinkToDaily, setAutoLinkToDaily] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,7 +25,20 @@ export default function CaptureInterface() {
         note_type: 'text'
       })
       console.log('Note created:', response)
-      setSuccessMessage(`✓ Note created successfully`)
+
+      // Auto-link to today's daily note if enabled
+      if (autoLinkToDaily) {
+        try {
+          await dailyNotesService.linkNoteToToday(response.id)
+          setSuccessMessage(`✓ Note created and linked to today's daily note`)
+        } catch (linkErr) {
+          console.error('Error linking to daily note:', linkErr)
+          setSuccessMessage(`✓ Note created (linking failed)`)
+        }
+      } else {
+        setSuccessMessage(`✓ Note created successfully`)
+      }
+
       setInput('')
 
       // Clear success message after 3 seconds
@@ -60,7 +75,19 @@ export default function CaptureInterface() {
           note_type: noteType
         })
         console.log('File note created:', response)
-        setSuccessMessage(`✓ File "${file.name}" note created`)
+
+        // Auto-link to today's daily note if enabled
+        if (autoLinkToDaily) {
+          try {
+            await dailyNotesService.linkNoteToToday(response.id)
+            setSuccessMessage(`✓ File "${file.name}" note created and linked to today`)
+          } catch (linkErr) {
+            console.error('Error linking file to daily note:', linkErr)
+            setSuccessMessage(`✓ File "${file.name}" note created (linking failed)`)
+          }
+        } else {
+          setSuccessMessage(`✓ File "${file.name}" note created`)
+        }
 
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000)
@@ -114,6 +141,21 @@ export default function CaptureInterface() {
 
       {/* Input area */}
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-4">
+        {/* Auto-link toggle */}
+        <div className="flex items-center gap-2 mb-3 text-sm">
+          <input
+            type="checkbox"
+            id="autoLinkToDaily"
+            checked={autoLinkToDaily}
+            onChange={(e) => setAutoLinkToDaily(e.target.checked)}
+            className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+          />
+          <label htmlFor="autoLinkToDaily" className="flex items-center gap-1 text-gray-700 cursor-pointer">
+            <LinkIcon className="w-4 h-4" />
+            Auto-link to today's daily note
+          </label>
+        </div>
+
         <div className="flex items-end gap-2">
           <button
             type="button"
