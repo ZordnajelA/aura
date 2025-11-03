@@ -46,7 +46,8 @@ export default function MarkdownEditor({
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3, 4, 5, 6]
-        }
+        },
+        dropcursor: false // Disable because we're adding it separately
       }),
       Placeholder.configure({
         placeholder: placeholder,
