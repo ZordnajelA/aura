@@ -29,6 +29,16 @@ export default function Navigation() {
               Home
             </Link>
             <Link
+              to="/notes"
+              className={`px-3 py-2 rounded-lg font-medium transition ${
+                isActive('/notes')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Notes
+            </Link>
+            <Link
               to="/daily"
               className={`px-3 py-2 rounded-lg font-medium transition ${
                 isActive('/daily')
