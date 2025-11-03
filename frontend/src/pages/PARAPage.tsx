@@ -20,7 +20,9 @@ export default function PARAPage() {
   const [resources, setResources] = useState<Resource[]>([])
   const [archives, setArchives] = useState<Archive[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [editingItem, setEditingItem] = useState<any>(null)
+  const [isEditMode, setIsEditMode] = useState(false)
 
   // Form states
   const [newItem, setNewItem] = useState({
@@ -69,42 +71,124 @@ export default function PARAPage() {
     }
   }
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     try {
-      switch (activeTab) {
-        case 'areas':
-          await paraService.createArea({
-            name: newItem.name,
-            description: newItem.description,
-            icon: newItem.icon,
-            display_order: newItem.display_order
-          })
-          break
-        case 'projects':
-          await paraService.createProject({
-            name: newItem.name,
-            description: newItem.description,
-            area_id: newItem.area_id || undefined,
-            status: newItem.status,
-            due_date: newItem.due_date || undefined
-          })
-          break
-        case 'resources':
-          await paraService.createResource({
-            title: newItem.title,
-            content: newItem.content,
-            area_id: newItem.area_id || undefined,
-            resource_type: newItem.resource_type,
-            url: newItem.url || undefined
-          })
-          break
+      if (isEditMode && editingItem) {
+        // Update existing item
+        switch (activeTab) {
+          case 'areas':
+            await paraService.updateArea(editingItem.id, {
+              name: newItem.name,
+              description: newItem.description,
+              icon: newItem.icon,
+              display_order: newItem.display_order
+            })
+            break
+          case 'projects':
+            await paraService.updateProject(editingItem.id, {
+              name: newItem.name,
+              description: newItem.description,
+              area_id: newItem.area_id || undefined,
+              status: newItem.status,
+              due_date: newItem.due_date || undefined
+            })
+            break
+          case 'resources':
+            await paraService.updateResource(editingItem.id, {
+              title: newItem.title,
+              content: newItem.content,
+              area_id: newItem.area_id || undefined,
+              resource_type: newItem.resource_type,
+              url: newItem.url || undefined
+            })
+            break
+        }
+      } else {
+        // Create new item
+        switch (activeTab) {
+          case 'areas':
+            await paraService.createArea({
+              name: newItem.name,
+              description: newItem.description,
+              icon: newItem.icon,
+              display_order: newItem.display_order
+            })
+            break
+          case 'projects':
+            await paraService.createProject({
+              name: newItem.name,
+              description: newItem.description,
+              area_id: newItem.area_id || undefined,
+              status: newItem.status,
+              due_date: newItem.due_date || undefined
+            })
+            break
+          case 'resources':
+            await paraService.createResource({
+              title: newItem.title,
+              content: newItem.content,
+              area_id: newItem.area_id || undefined,
+              resource_type: newItem.resource_type,
+              url: newItem.url || undefined
+            })
+            break
+        }
       }
-      setShowCreateModal(false)
-      resetForm()
+      closeModal()
       loadData()
     } catch (error) {
-      console.error('Error creating item:', error)
+      console.error('Error saving item:', error)
     }
+  }
+
+  const handleEdit = (item: any) => {
+    setEditingItem(item)
+    setIsEditMode(true)
+
+    // Pre-populate form based on item type
+    if (activeTab === 'areas') {
+      setNewItem({
+        ...newItem,
+        name: item.name || '',
+        description: item.description || '',
+        icon: item.icon || '',
+        display_order: item.display_order || 0
+      })
+    } else if (activeTab === 'projects') {
+      setNewItem({
+        ...newItem,
+        name: item.name || '',
+        description: item.description || '',
+        area_id: item.area_id || '',
+        status: item.status || 'active',
+        due_date: item.due_date || ''
+      })
+    } else if (activeTab === 'resources') {
+      setNewItem({
+        ...newItem,
+        title: item.title || '',
+        content: item.content || '',
+        area_id: item.area_id || '',
+        resource_type: item.resource_type || 'note',
+        url: item.url || ''
+      })
+    }
+
+    setShowModal(true)
+  }
+
+  const openCreateModal = () => {
+    setIsEditMode(false)
+    setEditingItem(null)
+    resetForm()
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setIsEditMode(false)
+    setEditingItem(null)
+    resetForm()
   }
 
   const handleDelete = async (id: string) => {
@@ -163,7 +247,7 @@ export default function PARAPage() {
             <h1 className="text-3xl font-bold text-gray-900">PARA Organization</h1>
             {activeTab !== 'archives' && (
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={openCreateModal}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
               >
                 <Plus className="h-5 w-5" />
@@ -200,13 +284,13 @@ export default function PARAPage() {
             ) : (
               <>
                 {activeTab === 'areas' && areas.map((area) => (
-                  <AreaCard key={area.id} area={area} onDelete={handleDelete} />
+                  <AreaCard key={area.id} area={area} onEdit={handleEdit} onDelete={handleDelete} />
                 ))}
                 {activeTab === 'projects' && projects.map((project) => (
-                  <ProjectCard key={project.id} project={project} onDelete={handleDelete} />
+                  <ProjectCard key={project.id} project={project} onEdit={handleEdit} onDelete={handleDelete} />
                 ))}
                 {activeTab === 'resources' && resources.map((resource) => (
-                  <ResourceCard key={resource.id} resource={resource} onDelete={handleDelete} />
+                  <ResourceCard key={resource.id} resource={resource} onEdit={handleEdit} onDelete={handleDelete} />
                 ))}
                 {activeTab === 'archives' && archives.map((archive) => (
                   <ArchiveCard key={archive.id} archive={archive} onDelete={handleDelete} />
@@ -225,12 +309,12 @@ export default function PARAPage() {
         </div>
       </main>
 
-      {/* Create Modal */}
-      {showCreateModal && (
+      {/* Create/Edit Modal */}
+      {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-2xl font-bold mb-4">
-              Create {activeTab.slice(0, -1).charAt(0).toUpperCase() + activeTab.slice(1, -1)}
+              {isEditMode ? 'Edit' : 'Create'} {activeTab.slice(0, -1).charAt(0).toUpperCase() + activeTab.slice(1, -1)}
             </h2>
 
             <div className="space-y-4">
@@ -333,16 +417,13 @@ export default function PARAPage() {
 
             <div className="flex gap-2 mt-6">
               <button
-                onClick={handleCreate}
+                onClick={handleSubmit}
                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
-                Create
+                {isEditMode ? 'Update' : 'Create'}
               </button>
               <button
-                onClick={() => {
-                  setShowCreateModal(false)
-                  resetForm()
-                }}
+                onClick={closeModal}
                 className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
               >
                 Cancel
@@ -356,7 +437,7 @@ export default function PARAPage() {
 }
 
 // Card Components
-function AreaCard({ area, onDelete }: { area: Area; onDelete: (id: string) => void }) {
+function AreaCard({ area, onEdit, onDelete }: { area: Area; onEdit: (item: Area) => void; onDelete: (id: string) => void }) {
   return (
     <div className="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
       <div className="flex justify-between items-start mb-2">
@@ -364,29 +445,45 @@ function AreaCard({ area, onDelete }: { area: Area; onDelete: (id: string) => vo
           {area.icon && <span className="text-2xl">{area.icon}</span>}
           <h3 className="font-semibold text-lg">{area.name}</h3>
         </div>
-        <button
-          onClick={() => onDelete(area.id)}
-          className="text-red-500 hover:text-red-700"
-        >
-          <Trash2 className="h-5 w-5" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onEdit(area)}
+            className="text-blue-500 hover:text-blue-700"
+          >
+            <Pencil className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => onDelete(area.id)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
       </div>
       {area.description && <p className="text-gray-600 text-sm">{area.description}</p>}
     </div>
   )
 }
 
-function ProjectCard({ project, onDelete }: { project: Project; onDelete: (id: string) => void }) {
+function ProjectCard({ project, onEdit, onDelete }: { project: Project; onEdit: (item: Project) => void; onDelete: (id: string) => void }) {
   return (
     <div className="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold text-lg">{project.name}</h3>
-        <button
-          onClick={() => onDelete(project.id)}
-          className="text-red-500 hover:text-red-700"
-        >
-          <Trash2 className="h-5 w-5" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onEdit(project)}
+            className="text-blue-500 hover:text-blue-700"
+          >
+            <Pencil className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => onDelete(project.id)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
       </div>
       {project.description && <p className="text-gray-600 text-sm mb-2">{project.description}</p>}
       <div className="flex items-center gap-2">
@@ -405,17 +502,25 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: (id: s
   )
 }
 
-function ResourceCard({ resource, onDelete }: { resource: Resource; onDelete: (id: string) => void }) {
+function ResourceCard({ resource, onEdit, onDelete }: { resource: Resource; onEdit: (item: Resource) => void; onDelete: (id: string) => void }) {
   return (
     <div className="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold text-lg">{resource.title}</h3>
-        <button
-          onClick={() => onDelete(resource.id)}
-          className="text-red-500 hover:text-red-700"
-        >
-          <Trash2 className="h-5 w-5" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onEdit(resource)}
+            className="text-blue-500 hover:text-blue-700"
+          >
+            <Pencil className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => onDelete(resource.id)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
       </div>
       {resource.content && <p className="text-gray-600 text-sm mb-2">{resource.content}</p>}
       <div className="flex items-center gap-2">
