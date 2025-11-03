@@ -2,7 +2,24 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Markdown } from 'tiptap-markdown'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import { Table } from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import { Color } from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
+import Highlight from '@tiptap/extension-highlight'
+import TextAlign from '@tiptap/extension-text-align'
+import Underline from '@tiptap/extension-underline'
+import Image from '@tiptap/extension-image'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import FontFamily from '@tiptap/extension-font-family'
 import { SlashCommand } from '../extensions/SlashCommand'
+import BubbleMenu from './BubbleMenu'
+import TableOfContents from './TableOfContents'
 import { useEffect, useState } from 'react'
 import './MarkdownEditor.css'
 import 'tippy.js/dist/tippy.css'
@@ -42,7 +59,33 @@ export default function MarkdownEditor({
         transformPastedText: true,
         transformCopiedText: true
       }),
-      SlashCommand
+      SlashCommand,
+      TaskList,
+      TaskItem.configure({
+        nested: true
+      }),
+      Table.configure({
+        resizable: true
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      TextStyle,
+      Color,
+      Highlight.configure({
+        multicolor: true
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+      Underline,
+      Image.configure({
+        inline: true,
+        allowBase64: true
+      }),
+      Subscript,
+      Superscript,
+      FontFamily
     ],
     content: value,
     editorProps: {
@@ -94,14 +137,19 @@ export default function MarkdownEditor({
   return (
     <div className="block-editor-container" style={{ height: `${height}px` }}>
       <div className="block-editor-header">
-        <button
-          onClick={() => setShowSource(!showSource)}
-          className={`source-toggle ${showSource ? 'active' : ''}`}
-          title="Toggle Markdown Source"
-          type="button"
-        >
-          {showSource ? '👁️ View' : '📝 Source'}
-        </button>
+        <div className="block-editor-header-left">
+          <TableOfContents editor={editor} />
+        </div>
+        <div className="block-editor-header-right">
+          <button
+            onClick={() => setShowSource(!showSource)}
+            className={`source-toggle ${showSource ? 'active' : ''}`}
+            title="Toggle Markdown Source"
+            type="button"
+          >
+            {showSource ? '👁️ View' : '📝 Source'}
+          </button>
+        </div>
       </div>
 
       {showSource ? (
@@ -111,13 +159,16 @@ export default function MarkdownEditor({
           onChange={(e) => handleSourceChange(e.target.value)}
           onBlur={handleSourceBlur}
           style={{
-            height: `${height - 40}px`
+            height: `${height - 50}px`
           }}
         />
       ) : (
-        <div className="block-editor-wrapper" style={{ height: `${height - 40}px` }}>
-          <EditorContent editor={editor} />
-        </div>
+        <>
+          <BubbleMenu editor={editor} />
+          <div className="block-editor-wrapper" style={{ height: `${height - 50}px` }}>
+            <EditorContent editor={editor} />
+          </div>
+        </>
       )}
     </div>
   )
