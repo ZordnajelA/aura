@@ -15,6 +15,7 @@
     "@tiptap/extension-placeholder": "^3.10.1",
     "@tiptap/react": "^3.10.1",
     "@tiptap/starter-kit": "^3.10.1",
+    "@tiptap/suggestion": "^3.10.1",
     "@uiw/react-markdown-preview": "^5.1.5",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
@@ -27,6 +28,7 @@
     "react-router-dom": "^6.20.0",
     "remark-gfm": "^4.0.0",
     "tailwind-merge": "^2.1.0",
+    "tippy.js": "^6.3.7",
     "tiptap-markdown": "^0.9.0",
     "zustand": "^4.4.7"
   },
