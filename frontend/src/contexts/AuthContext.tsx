@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const register = async (credentials: RegisterCredentials) => {
-    const newUser = await authService.register(credentials)
+    await authService.register(credentials)
     // After registration, automatically log in
     await login(credentials)
   }

@@ -10,8 +10,21 @@ from .auth import (
     UserResponse,
     TokenData
 )
+from .note import (
+    NoteCreate,
+    NoteUpdate,
+    NoteResponse,
+    NoteLinkCreate,
+    NoteLinkResponse
+)
+from .daily_notes import (
+    DailyNoteCreate,
+    DailyNoteUpdate,
+    DailyNoteResponse,
+    DailyNoteLinkCreate,
+    DailyNoteLinkResponse
+)
 
 # Schemas will be imported here as they are created
-# from .note import NoteCreate, NoteUpdate, NoteResponse
 # from .para import AreaCreate, ProjectCreate, ResourceCreate
 # from .chat import ChatMessageCreate, ChatMessageResponse
