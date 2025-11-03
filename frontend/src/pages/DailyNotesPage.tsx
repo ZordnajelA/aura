@@ -32,6 +32,7 @@ export default function DailyNotesPage() {
   const [allNotes, setAllNotes] = useState<Note[]>([])
   const [, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [editingContent, setEditingContent] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
@@ -110,6 +111,7 @@ export default function DailyNotesPage() {
     try {
       setIsSaving(true)
       setError(null)
+      setSuccessMessage(null)
       const dateKey = formatDateKey(selectedDate)
       const saved = await dailyNotesService.createOrUpdateDailyNote({
         note_date: dateKey,
@@ -117,33 +119,60 @@ export default function DailyNotesPage() {
       })
       setCurrentDailyNote(saved)
       await loadDailyNotes()
+
+      // Show success message
+      setSuccessMessage('✓ Daily note saved successfully!')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err) {
       console.error('Error saving daily note:', err)
-      setError('Failed to save daily note')
+      setError('Failed to save daily note. Please try again.')
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleLinkNote = async (noteId: string) => {
-    if (!currentDailyNote) {
-      // Create daily note first
-      await handleSaveDailyNote()
-      // Wait a bit for the note to be created
-      await new Promise(resolve => setTimeout(resolve, 500))
-      // Reload to get the ID
-      await loadDailyNoteForDate(selectedDate)
-    }
-
     try {
-      if (currentDailyNote?.id) {
-        await dailyNotesService.linkNoteToDailyNote(currentDailyNote.id, noteId)
-        const linked = await dailyNotesService.getLinkedNotes(currentDailyNote.id)
-        setLinkedNotes(linked)
+      setError(null)
+      setSuccessMessage(null)
+      let dailyNote = currentDailyNote
+      let createdNewDailyNote = false
+
+      // If no daily note exists for this date, create one
+      if (!dailyNote) {
+        const dateKey = formatDateKey(selectedDate)
+        dailyNote = await dailyNotesService.createOrUpdateDailyNote({
+          note_date: dateKey,
+          content: editingContent || ''
+        })
+        setCurrentDailyNote(dailyNote)
+        await loadDailyNotes() // Refresh the dates with notes indicator
+        createdNewDailyNote = true
       }
+
+      // Now link the note
+      await dailyNotesService.linkNoteToDailyNote(dailyNote.id, noteId)
+      const linked = await dailyNotesService.getLinkedNotes(dailyNote.id)
+      setLinkedNotes(linked)
+
+      // Show success message
+      const dateFormatted = selectedDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+
+      if (createdNewDailyNote) {
+        setSuccessMessage(`✓ Note linked successfully! Daily note for ${dateFormatted} was created automatically.`)
+      } else {
+        setSuccessMessage(`✓ Note linked successfully!`)
+      }
+
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
       console.error('Error linking note:', err)
-      setError('Failed to link note')
+      setError('Failed to link note. Please try again.')
     }
   }
 
@@ -151,12 +180,18 @@ export default function DailyNotesPage() {
     if (!currentDailyNote?.id) return
 
     try {
+      setError(null)
+      setSuccessMessage(null)
       await dailyNotesService.unlinkNoteFromDailyNote(currentDailyNote.id, noteId)
       const linked = await dailyNotesService.getLinkedNotes(currentDailyNote.id)
       setLinkedNotes(linked)
+
+      // Show success message
+      setSuccessMessage('✓ Note unlinked successfully!')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err) {
       console.error('Error unlinking note:', err)
-      setError('Failed to unlink note')
+      setError('Failed to unlink note. Please try again.')
     }
   }
 
@@ -345,6 +380,13 @@ export default function DailyNotesPage() {
                   </div>
                 )}
               </div>
+
+              {/* Success Message */}
+              {successMessage && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+                  {successMessage}
+                </div>
+              )}
 
               {/* Error Message */}
               {error && (
