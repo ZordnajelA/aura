@@ -1,9 +1,29 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Plus, Loader2, ChevronLeft, ChevronRight, Link as LinkIcon, X } from 'lucide-react'
+import { Calendar, Plus, Loader2, ChevronLeft, ChevronRight, Link as LinkIcon, X, FileText, Image, FileAudio, FileVideo, File, Link2 } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 import CalendarView from '@/components/CalendarView'
 import dailyNotesService, { DailyNote } from '@/services/daily_notes'
 import notesService, { Note } from '@/services/notes'
+
+const NOTE_TYPE_ICONS = {
+  text: FileText,
+  image: Image,
+  audio: FileAudio,
+  video: FileVideo,
+  pdf: File,
+  link: Link2,
+  file: File,
+}
+
+const NOTE_TYPE_COLORS = {
+  text: 'bg-blue-100 text-blue-700',
+  image: 'bg-green-100 text-green-700',
+  audio: 'bg-purple-100 text-purple-700',
+  video: 'bg-red-100 text-red-700',
+  pdf: 'bg-orange-100 text-orange-700',
+  link: 'bg-cyan-100 text-cyan-700',
+  file: 'bg-gray-100 text-gray-700',
+}
 
 export default function DailyNotesPage() {
   const [, setDailyNotes] = useState<DailyNote[]>([])
@@ -15,7 +35,7 @@ export default function DailyNotesPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [editingContent, setEditingContent] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
-  const [showCalendar, setShowCalendar] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(true)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [datesWithNotes, setDatesWithNotes] = useState<Set<string>>(new Set())
 
@@ -29,7 +49,10 @@ export default function DailyNotesPage() {
   }, [selectedDate])
 
   const formatDateKey = (date: Date): string => {
-    return date.toISOString().split('T')[0]
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   const loadDailyNotes = async () => {
@@ -172,6 +195,15 @@ export default function DailyNotesPage() {
     return allNotes.filter(n => !linkedNoteIds.has(n.id))
   }
 
+  const getNoteIcon = (noteType: string) => {
+    const Icon = NOTE_TYPE_ICONS[noteType as keyof typeof NOTE_TYPE_ICONS] || FileText
+    return Icon
+  }
+
+  const getNoteColor = (noteType: string) => {
+    return NOTE_TYPE_COLORS[noteType as keyof typeof NOTE_TYPE_COLORS] || 'bg-gray-100 text-gray-700'
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <Navigation />
@@ -282,28 +314,34 @@ export default function DailyNotesPage() {
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {linkedNotes.map((note) => (
-                      <div
-                        key={note.id}
-                        className="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{note.title || 'Untitled'}</h4>
-                          <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                            {note.content}
-                          </p>
-                          <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                            {note.note_type}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleUnlinkNote(note.id)}
-                          className="ml-3 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                    {linkedNotes.map((note) => {
+                      const Icon = getNoteIcon(note.note_type)
+                      return (
+                        <div
+                          key={note.id}
+                          className="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${getNoteColor(note.note_type)}`}>
+                                <Icon className="w-3.5 h-3.5" />
+                                {note.note_type}
+                              </div>
+                            </div>
+                            <h4 className="font-medium text-gray-900">{note.title || 'Untitled'}</h4>
+                            <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                              {note.content}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleUnlinkNote(note.id)}
+                            className="ml-3 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -351,29 +389,33 @@ export default function DailyNotesPage() {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {getAvailableNotesToLink().map((note) => (
-                    <button
-                      key={note.id}
-                      onClick={() => {
-                        handleLinkNote(note.id)
-                        setShowLinkModal(false)
-                      }}
-                      className="w-full text-left p-4 border rounded-lg hover:bg-gray-50 hover:border-indigo-300 transition-colors"
-                    >
-                      <h4 className="font-medium text-gray-900">{note.title || 'Untitled'}</h4>
-                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                        {note.content}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                          {note.note_type}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(note.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                  {getAvailableNotesToLink().map((note) => {
+                    const Icon = getNoteIcon(note.note_type)
+                    return (
+                      <button
+                        key={note.id}
+                        onClick={() => {
+                          handleLinkNote(note.id)
+                          setShowLinkModal(false)
+                        }}
+                        className="w-full text-left p-4 border rounded-lg hover:bg-gray-50 hover:border-indigo-300 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${getNoteColor(note.note_type)}`}>
+                            <Icon className="w-3.5 h-3.5" />
+                            {note.note_type}
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {new Date(note.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <h4 className="font-medium text-gray-900">{note.title || 'Untitled'}</h4>
+                        <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                          {note.content}
+                        </p>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
