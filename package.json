@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@uiw/react-markdown-preview": "^5.1.5",
-    "@uiw/react-md-editor": "^4.0.8"
-  }
-}
