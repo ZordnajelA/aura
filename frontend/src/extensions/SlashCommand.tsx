@@ -67,6 +67,14 @@ const suggestionItems: CommandItem[] = [
     }
   },
   {
+    title: 'Task List',
+    description: 'Track tasks with a checkbox list.',
+    icon: '☑',
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleTaskList().run()
+    }
+  },
+  {
     title: 'Quote',
     description: 'Capture a quote.',
     icon: '"',
@@ -80,6 +88,30 @@ const suggestionItems: CommandItem[] = [
     icon: '</>',
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
+    }
+  },
+  {
+    title: 'Table',
+    description: 'Insert a table.',
+    icon: '⊞',
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run()
+    }
+  },
+  {
+    title: 'Image',
+    description: 'Upload or embed an image.',
+    icon: '🖼',
+    command: ({ editor, range }) => {
+      const url = window.prompt('Enter image URL:')
+      if (url) {
+        editor.chain().focus().deleteRange(range).setImage({ src: url }).run()
+      }
     }
   },
   {
