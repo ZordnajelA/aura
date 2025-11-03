@@ -21,55 +21,105 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
   useEffect(() => {
     if (!menuRef.current) return
 
+    const element = menuRef.current
+
     const updateMenu = () => {
-      const { state } = editor
+      const { state, view } = editor
       const { selection } = state
       const { empty } = selection
 
       if (empty) {
-        tippyInstanceRef.current?.hide()
+        if (tippyInstanceRef.current) {
+          tippyInstanceRef.current.hide()
+        }
         return
       }
 
       if (!tippyInstanceRef.current) {
-        tippyInstanceRef.current = tippy(document.body, {
+        tippyInstanceRef.current = tippy(view.dom, {
           getReferenceClientRect: () => {
             const { ranges } = selection
-            const from = Math.min(...ranges.map((range) => range.$from.pos))
+            const fromPos = Math.min(...ranges.map((range) => range.$from.pos))
 
-            return editor.view.coordsAtPos(from) as DOMRect
+            const coords = view.coordsAtPos(fromPos)
+            return {
+              width: 0,
+              height: 0,
+              x: coords.left,
+              y: coords.top,
+              left: coords.left,
+              right: coords.right,
+              top: coords.top,
+              bottom: coords.bottom,
+              toJSON: () => ({})
+            } as DOMRect
           },
           appendTo: () => document.body,
-          content: menuRef.current!,
+          content: element,
           showOnCreate: true,
           interactive: true,
           trigger: 'manual',
           placement: 'top',
-          arrow: false
+          arrow: true,
+          maxWidth: 'none'
         })
-      }
+      } else {
+        tippyInstanceRef.current.setProps({
+          getReferenceClientRect: () => {
+            const { ranges } = selection
+            const fromPos = Math.min(...ranges.map((range) => range.$from.pos))
 
-      tippyInstanceRef.current.show()
+            const coords = view.coordsAtPos(fromPos)
+            return {
+              width: 0,
+              height: 0,
+              x: coords.left,
+              y: coords.top,
+              left: coords.left,
+              right: coords.right,
+              top: coords.top,
+              bottom: coords.bottom,
+              toJSON: () => ({})
+            } as DOMRect
+          }
+        })
+        tippyInstanceRef.current.show()
+      }
     }
 
-    editor.on('selectionUpdate', updateMenu)
-    editor.on('update', updateMenu)
+    const handleUpdate = () => {
+      updateMenu()
+    }
+
+    const handleSelectionUpdate = () => {
+      updateMenu()
+    }
+
+    editor.on('update', handleUpdate)
+    editor.on('selectionUpdate', handleSelectionUpdate)
+    editor.on('focus', handleUpdate)
 
     return () => {
-      editor.off('selectionUpdate', updateMenu)
-      editor.off('update', updateMenu)
-      tippyInstanceRef.current?.destroy()
+      editor.off('update', handleUpdate)
+      editor.off('selectionUpdate', handleSelectionUpdate)
+      editor.off('focus', handleUpdate)
+
+      if (tippyInstanceRef.current) {
+        tippyInstanceRef.current.destroy()
+        tippyInstanceRef.current = null
+      }
     }
   }, [editor])
 
   return (
-    <div ref={menuRef} className="bubble-menu">
+    <div ref={menuRef} className="bubble-menu visible">
       <div className="bubble-menu-content">
         {/* Text Formatting */}
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={editor.isActive('bold') ? 'active' : ''}
           title="Bold (Ctrl+B)"
+          type="button"
         >
           <strong>B</strong>
         </button>
@@ -78,6 +128,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={editor.isActive('italic') ? 'active' : ''}
           title="Italic (Ctrl+I)"
+          type="button"
         >
           <em>I</em>
         </button>
@@ -86,6 +137,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           className={editor.isActive('underline') ? 'active' : ''}
           title="Underline (Ctrl+U)"
+          type="button"
         >
           <u>U</u>
         </button>
@@ -94,6 +146,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().toggleStrike().run()}
           className={editor.isActive('strike') ? 'active' : ''}
           title="Strikethrough"
+          type="button"
         >
           <s>S</s>
         </button>
@@ -102,6 +155,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().toggleCode().run()}
           className={editor.isActive('code') ? 'active' : ''}
           title="Inline Code"
+          type="button"
         >
           {'</>'}
         </button>
@@ -113,6 +167,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().toggleSuperscript().run()}
           className={editor.isActive('superscript') ? 'active' : ''}
           title="Superscript"
+          type="button"
         >
           x<sup>2</sup>
         </button>
@@ -121,6 +176,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().toggleSubscript().run()}
           className={editor.isActive('subscript') ? 'active' : ''}
           title="Subscript"
+          type="button"
         >
           x<sub>2</sub>
         </button>
@@ -137,6 +193,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
             }}
             title="Text Color"
             className="color-button"
+            type="button"
           >
             A
             <span className="color-indicator" style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000000' }} />
@@ -153,6 +210,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                     setShowColorPicker(false)
                   }}
                   title={color}
+                  type="button"
                 />
               ))}
             </div>
@@ -169,6 +227,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
             }}
             title="Highlight"
             className="color-button"
+            type="button"
           >
             <span style={{ backgroundColor: '#fef3c7', padding: '0 4px' }}>H</span>
           </button>
@@ -191,6 +250,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                     setShowHighlightPicker(false)
                   }}
                   title={color === 'transparent' ? 'Remove highlight' : color}
+                  type="button"
                 />
               ))}
             </div>
@@ -209,6 +269,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
             }}
             title="Font Size"
             className="text-size-button"
+            type="button"
           >
             Size
           </button>
@@ -222,6 +283,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                     editor.chain().focus().setFontSize(size).run()
                     setShowFontSizePicker(false)
                   }}
+                  type="button"
                 >
                   {size}
                 </button>
@@ -237,6 +299,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           className={editor.isActive({ textAlign: 'left' }) ? 'active' : ''}
           title="Align Left"
+          type="button"
         >
           ⬅
         </button>
@@ -245,6 +308,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
           className={editor.isActive({ textAlign: 'center' }) ? 'active' : ''}
           title="Align Center"
+          type="button"
         >
           ↔
         </button>
@@ -253,6 +317,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
           className={editor.isActive({ textAlign: 'right' }) ? 'active' : ''}
           title="Align Right"
+          type="button"
         >
           ➡
         </button>
@@ -261,6 +326,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
           className={editor.isActive({ textAlign: 'justify' }) ? 'active' : ''}
           title="Justify"
+          type="button"
         >
           ≡
         </button>

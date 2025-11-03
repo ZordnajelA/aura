@@ -1,20 +1,9 @@
 .floating-menu {
   position: absolute;
-  display: flex;
+  display: none;
   gap: 0.25rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 50;
+  z-index: 10;
   pointer-events: auto;
-}
-
-.floating-menu:hover,
-.floating-menu.visible {
-  opacity: 1;
-}
-
-.block-editor-wrapper:hover .floating-menu {
-  opacity: 1;
 }
 
 .floating-menu-button {
@@ -60,11 +49,11 @@
   opacity: 0.5;
 }
 
-/* Make sure floating menu appears on the left side */
+/* Ensure the block editor wrapper is positioned */
 .block-editor-wrapper {
   position: relative;
 }
 
-.block-editor-wrapper .ProseMirror > * {
-  position: relative;
+[data-block-hovered="true"] {
+  /* Optional: Add a subtle indicator when hovering */
 }
