@@ -116,7 +116,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
       <div className="bubble-menu-content">
         {/* Text Formatting */}
         <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleBold().run()
+          }}
           className={editor.isActive('bold') ? 'active' : ''}
           title="Bold (Ctrl+B)"
           type="button"
@@ -125,7 +128,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </button>
 
         <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleItalic().run()
+          }}
           className={editor.isActive('italic') ? 'active' : ''}
           title="Italic (Ctrl+I)"
           type="button"
@@ -134,7 +140,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </button>
 
         <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleUnderline().run()
+          }}
           className={editor.isActive('underline') ? 'active' : ''}
           title="Underline (Ctrl+U)"
           type="button"
@@ -143,7 +152,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </button>
 
         <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleStrike().run()
+          }}
           className={editor.isActive('strike') ? 'active' : ''}
           title="Strikethrough"
           type="button"
@@ -152,7 +164,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </button>
 
         <button
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleCode().run()
+          }}
           className={editor.isActive('code') ? 'active' : ''}
           title="Inline Code"
           type="button"
@@ -164,7 +179,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
 
         {/* Superscript / Subscript */}
         <button
-          onClick={() => editor.chain().focus().toggleSuperscript().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleSuperscript().run()
+          }}
           className={editor.isActive('superscript') ? 'active' : ''}
           title="Superscript"
           type="button"
@@ -173,7 +191,10 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </button>
 
         <button
-          onClick={() => editor.chain().focus().toggleSubscript().run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().toggleSubscript().run()
+          }}
           className={editor.isActive('subscript') ? 'active' : ''}
           title="Subscript"
           type="button"
@@ -186,7 +207,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         {/* Text Color */}
         <div className="bubble-menu-dropdown">
           <button
-            onClick={() => {
+            onMouseDown={(e) => {
+              e.preventDefault()
               setShowColorPicker(!showColorPicker)
               setShowHighlightPicker(false)
               setShowFontSizePicker(false)
@@ -205,7 +227,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                   key={color}
                   className="color-swatch"
                   style={{ backgroundColor: color }}
-                  onClick={() => {
+                  onMouseDown={(e) => {
+                    e.preventDefault()
                     editor.chain().focus().setColor(color).run()
                     setShowColorPicker(false)
                   }}
@@ -220,7 +243,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         {/* Highlight */}
         <div className="bubble-menu-dropdown">
           <button
-            onClick={() => {
+            onMouseDown={(e) => {
+              e.preventDefault()
               setShowHighlightPicker(!showHighlightPicker)
               setShowColorPicker(false)
               setShowFontSizePicker(false)
@@ -241,7 +265,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                     backgroundColor: color,
                     border: color === 'transparent' ? '1px solid #e5e7eb' : 'none'
                   }}
-                  onClick={() => {
+                  onMouseDown={(e) => {
+                    e.preventDefault()
                     if (color === 'transparent') {
                       editor.chain().focus().unsetHighlight().run()
                     } else {
@@ -262,7 +287,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         {/* Font Size */}
         <div className="bubble-menu-dropdown">
           <button
-            onClick={() => {
+            onMouseDown={(e) => {
+              e.preventDefault()
               setShowFontSizePicker(!showFontSizePicker)
               setShowColorPicker(false)
               setShowHighlightPicker(false)
@@ -279,7 +305,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                 <button
                   key={size}
                   className="size-option"
-                  onClick={() => {
+                  onMouseDown={(e) => {
+                    e.preventDefault()
                     editor.chain().focus().setFontSize(size).run()
                     setShowFontSizePicker(false)
                   }}
@@ -296,34 +323,46 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
 
         {/* Alignment */}
         <button
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().setTextAlign('left').run()
+          }}
           className={editor.isActive({ textAlign: 'left' }) ? 'active' : ''}
           title="Align Left"
           type="button"
         >
-          ⬅
+          ☰
         </button>
 
         <button
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().setTextAlign('center').run()
+          }}
           className={editor.isActive({ textAlign: 'center' }) ? 'active' : ''}
           title="Align Center"
           type="button"
         >
-          ↔
+          ≣
         </button>
 
         <button
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().setTextAlign('right').run()
+          }}
           className={editor.isActive({ textAlign: 'right' }) ? 'active' : ''}
           title="Align Right"
           type="button"
         >
-          ➡
+          ☱
         </button>
 
         <button
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            editor.chain().focus().setTextAlign('justify').run()
+          }}
           className={editor.isActive({ textAlign: 'justify' }) ? 'active' : ''}
           title="Justify"
           type="button"
