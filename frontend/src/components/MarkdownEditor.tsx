@@ -21,9 +21,8 @@ import Dropcursor from '@tiptap/extension-dropcursor'
 import { FontSize } from '../extensions/FontSize'
 import { SlashCommand } from '../extensions/SlashCommand'
 import BubbleMenu from './BubbleMenu'
-import TableOfContents from './TableOfContents'
 import FloatingMenu from './FloatingMenu'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import './MarkdownEditor.css'
 import 'tippy.js/dist/tippy.css'
 
@@ -42,9 +41,6 @@ export default function MarkdownEditor({
   height = 200,
   preview: _preview = 'edit' // Kept for backwards compatibility
 }: MarkdownEditorProps) {
-  const [showSource, setShowSource] = useState(false)
-  const [sourceValue, setSourceValue] = useState(value)
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -116,66 +112,17 @@ export default function MarkdownEditor({
     }
   }, [value, editor])
 
-  // Update source value when switching to source mode
-  useEffect(() => {
-    if (showSource && editor) {
-      // @ts-ignore - markdown storage is added by the Markdown extension
-      setSourceValue(editor.storage.markdown.getMarkdown())
-    }
-  }, [showSource, editor])
-
-  const handleSourceChange = (newValue: string) => {
-    setSourceValue(newValue)
-  }
-
-  const handleSourceBlur = () => {
-    if (editor) {
-      editor.commands.setContent(sourceValue)
-      onChange(sourceValue)
-    }
-  }
-
   if (!editor) {
     return null
   }
 
   return (
     <div className="block-editor-container" style={{ height: `${height}px` }}>
-      <div className="block-editor-header">
-        <div className="block-editor-header-left">
-          <TableOfContents editor={editor} />
-        </div>
-        <div className="block-editor-header-right">
-          <button
-            onClick={() => setShowSource(!showSource)}
-            className={`source-toggle ${showSource ? 'active' : ''}`}
-            title="Toggle Markdown Source"
-            type="button"
-          >
-            {showSource ? '👁️ View' : '📝 Source'}
-          </button>
-        </div>
+      <BubbleMenu editor={editor} />
+      <FloatingMenu editor={editor} />
+      <div className="block-editor-wrapper" style={{ height: `${height}px` }}>
+        <EditorContent editor={editor} />
       </div>
-
-      {showSource ? (
-        <textarea
-          className="block-editor-source"
-          value={sourceValue}
-          onChange={(e) => handleSourceChange(e.target.value)}
-          onBlur={handleSourceBlur}
-          style={{
-            height: `${height - 50}px`
-          }}
-        />
-      ) : (
-        <>
-          <BubbleMenu editor={editor} />
-          <FloatingMenu editor={editor} />
-          <div className="block-editor-wrapper" style={{ height: `${height - 50}px` }}>
-            <EditorContent editor={editor} />
-          </div>
-        </>
-      )}
     </div>
   )
 }
