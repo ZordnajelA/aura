@@ -91,13 +91,13 @@ export interface Archive {
   parent_type: 'project' | 'area' | 'resource' | 'note'
   parent_id: string
   archived_at: string
-  metadata: string | null
+  archive_metadata: string | null
 }
 
 export interface ArchiveCreate {
   parent_type: string
   parent_id: string
-  metadata?: string
+  archive_metadata?: string
 }
 
 // ============================================================================

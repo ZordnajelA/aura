@@ -116,7 +116,7 @@ class ArchiveCreate(BaseModel):
     """Schema for creating an archive entry"""
     parent_type: str = Field(..., description="Type of parent entity (project, area, resource, note)")
     parent_id: UUID = Field(..., description="ID of the parent entity being archived")
-    metadata: Optional[str] = Field(None, description="JSON metadata about the archived item")
+    archive_metadata: Optional[str] = Field(None, description="JSON metadata about the archived item")
 
 
 class ArchiveResponse(BaseModel):
@@ -126,6 +126,6 @@ class ArchiveResponse(BaseModel):
     parent_type: str
     parent_id: UUID
     archived_at: datetime
-    metadata: Optional[str]
+    archive_metadata: Optional[str]
 
     model_config = {"from_attributes": True}
