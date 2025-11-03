@@ -203,7 +203,7 @@ class Archive(Base):
     parent_type = Column(SQLEnum(ParentType), nullable=False)
     parent_id = Column(UUID(as_uuid=True), nullable=False)
     archived_at = Column(DateTime, default=func.now(), nullable=False)
-    metadata = Column(Text, nullable=True)  # JSON metadata stored as text
+    archive_metadata = Column("metadata", Text, nullable=True)  # Maps to 'metadata' column in DB
 
     # Relationships
     user = relationship("User", backref="archives")

@@ -421,7 +421,7 @@ async def create_archive(
         user_id=current_user.id,
         parent_type=archive.parent_type,
         parent_id=archive.parent_id,
-        metadata=archive.metadata
+        archive_metadata=archive.archive_metadata
     )
 
     db.add(db_archive)
