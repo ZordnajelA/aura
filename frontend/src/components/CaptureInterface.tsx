@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Paperclip, Send } from 'lucide-react'
-import { captureText, captureFile } from '../services/capture'
+import notesService from '../services/notes'
 
 export default function CaptureInterface() {
   const [input, setInput] = useState('')
@@ -18,16 +18,19 @@ export default function CaptureInterface() {
     setSuccessMessage(null)
 
     try {
-      const response = await captureText(input.trim())
-      console.log('Captured:', response)
-      setSuccessMessage(`✓ Captured successfully`)
+      const response = await notesService.createNote({
+        content: input.trim(),
+        note_type: 'text'
+      })
+      console.log('Note created:', response)
+      setSuccessMessage(`✓ Note created successfully`)
       setInput('')
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err) {
-      console.error('Error capturing text:', err)
-      setError('Failed to capture. Please try again.')
+      console.error('Error creating note:', err)
+      setError('Failed to create note. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -42,15 +45,28 @@ export default function CaptureInterface() {
 
     for (const file of Array.from(files)) {
       try {
-        const response = await captureFile(file)
-        console.log('File captured:', response)
-        setSuccessMessage(`✓ File "${file.name}" captured successfully`)
+        // Determine note type based on file type
+        let noteType = 'file'
+        if (file.type.startsWith('image/')) noteType = 'image'
+        else if (file.type.startsWith('audio/')) noteType = 'audio'
+        else if (file.type.startsWith('video/')) noteType = 'video'
+        else if (file.type === 'application/pdf') noteType = 'pdf'
+
+        // For now, create a note with file information
+        // TODO: Implement full file upload with media service
+        const response = await notesService.createNote({
+          title: file.name,
+          content: `File upload placeholder: ${file.name} (${file.type}, ${(file.size / 1024).toFixed(2)} KB)`,
+          note_type: noteType
+        })
+        console.log('File note created:', response)
+        setSuccessMessage(`✓ File "${file.name}" note created`)
 
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000)
       } catch (err) {
-        console.error('Error capturing file:', err)
-        setError(`Failed to capture file "${file.name}". Please try again.`)
+        console.error('Error creating file note:', err)
+        setError(`Failed to create note for file "${file.name}". Please try again.`)
       }
     }
 
