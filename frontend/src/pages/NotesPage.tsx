@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FileText, Image, FileAudio, FileVideo, File, Link2, Loader2, Trash2, Edit, Search, Filter } from 'lucide-react'
 import Navigation from '@/components/Navigation'
+import MarkdownEditor from '@/components/MarkdownEditor'
+import MarkdownRenderer from '@/components/MarkdownRenderer'
 import notesService, { Note } from '@/services/notes'
 
 const NOTE_TYPE_ICONS = {
@@ -345,12 +347,12 @@ function NoteDetailModal({ note, isEditing, onClose, onEdit, onSave, onDelete }:
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                <textarea
+                <MarkdownEditor
                   value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  placeholder="Note content"
-                  rows={12}
-                  className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                  onChange={setEditContent}
+                  placeholder="Note content - supports markdown formatting"
+                  height={400}
+                  preview="edit"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4 border-t">
@@ -380,9 +382,7 @@ function NoteDetailModal({ note, isEditing, onClose, onEdit, onSave, onDelete }:
                 </div>
               )}
               <div className="prose max-w-none">
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {note.content || <span className="text-gray-400 italic">No content</span>}
-                </p>
+                <MarkdownRenderer content={note.content || ''} className="text-gray-700" />
               </div>
               <div className="pt-4 border-t text-sm text-gray-500">
                 <p>Last updated: {new Date(note.updated_at).toLocaleString()}</p>

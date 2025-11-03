@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { Paperclip, Send, Link as LinkIcon } from 'lucide-react'
+import MarkdownEditor from './MarkdownEditor'
 import notesService from '../services/notes'
 import dailyNotesService from '../services/daily_notes'
 
@@ -156,38 +157,48 @@ export default function CaptureInterface() {
           </label>
         </div>
 
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            onClick={handleClipClick}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Attach file"
-          >
-            <Paperclip className="w-5 h-5 text-gray-600" />
-          </button>
+        <div className="space-y-3">
+          <div className="flex-1">
+            <MarkdownEditor
+              value={input}
+              onChange={setInput}
+              placeholder="Capture anything: text, ideas, tasks...
 
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Capture anything: text, ideas, tasks, or paste a link..."
-            className="flex-1 resize-none border-0 focus:ring-0 focus:outline-none max-h-32"
-            rows={1}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                handleSubmit(e)
-              }
-            }}
-          />
+**Supports markdown:**
+- **Bold**, *italic*, `code`
+- Lists and [links](url)"
+              height={150}
+              preview="edit"
+            />
+          </div>
 
-          <button
-            type="submit"
-            disabled={!input.trim() || isSubmitting}
-            className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            aria-label="Send"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleClipClick}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm text-gray-700"
+              aria-label="Attach file"
+            >
+              <Paperclip className="w-4 h-4" />
+              Attach File
+            </button>
+
+            <button
+              type="submit"
+              disabled={!input.trim() || isSubmitting}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label="Send"
+            >
+              {isSubmitting ? (
+                'Saving...'
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Capture
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Calendar, Plus, Loader2, ChevronLeft, ChevronRight, Link as LinkIcon, X, FileText, Image, FileAudio, FileVideo, File, Link2 } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 import CalendarView from '@/components/CalendarView'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import dailyNotesService, { DailyNote } from '@/services/daily_notes'
 import notesService, { Note } from '@/services/notes'
 
@@ -300,11 +301,19 @@ export default function DailyNotesPage() {
               {/* Daily Note Content */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold mb-4">Daily Note</h3>
-                <textarea
+                <MarkdownEditor
                   value={editingContent}
-                  onChange={(e) => setEditingContent(e.target.value)}
-                  placeholder="What's on your mind today? Capture your thoughts, ideas, and reflections..."
-                  className="w-full border rounded-lg p-4 min-h-[200px] focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                  onChange={setEditingContent}
+                  placeholder="What's on your mind today? Capture your thoughts, ideas, and reflections...
+
+**Try markdown formatting:**
+- **Bold text**
+- *Italic text*
+- `Code snippets`
+- [Links](https://example.com)
+- # Headings"
+                  height={300}
+                  preview="edit"
                 />
                 <div className="mt-4 flex justify-end">
                   <button
