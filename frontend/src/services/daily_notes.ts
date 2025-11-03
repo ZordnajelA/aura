@@ -1,4 +1,5 @@
 import api from './api'
+import { Note } from './notes'
 
 export interface DailyNote {
   id: string
@@ -7,6 +8,14 @@ export interface DailyNote {
   content: string | null
   created_at: string
   updated_at: string
+  linked_note_ids?: string[]
+}
+
+export interface DailyNoteLink {
+  id: string
+  daily_note_id: string
+  note_id: string
+  created_at: string
 }
 
 export interface DailyNoteCreate {
@@ -66,6 +75,37 @@ class DailyNotesService {
   getTodayDate(): string {
     const today = new Date()
     return today.toISOString().split('T')[0]
+  }
+
+  /**
+   * Link a note to a daily note
+   */
+  async linkNoteToDailyNote(dailyNoteId: string, noteId: string): Promise<DailyNoteLink> {
+    const response = await api.post<DailyNoteLink>(`/daily/${dailyNoteId}/links/${noteId}`)
+    return response.data
+  }
+
+  /**
+   * Get all notes linked to a daily note
+   */
+  async getLinkedNotes(dailyNoteId: string): Promise<Note[]> {
+    const response = await api.get<Note[]>(`/daily/${dailyNoteId}/linked-notes`)
+    return response.data
+  }
+
+  /**
+   * Unlink a note from a daily note
+   */
+  async unlinkNoteFromDailyNote(dailyNoteId: string, noteId: string): Promise<void> {
+    await api.delete(`/daily/${dailyNoteId}/links/${noteId}`)
+  }
+
+  /**
+   * Link a note to today's daily note (auto-creates today's note if needed)
+   */
+  async linkNoteToToday(noteId: string): Promise<DailyNoteLink> {
+    const response = await api.post<DailyNoteLink>(`/daily/link-to-today/${noteId}`)
+    return response.data
   }
 }
 

@@ -7,6 +7,10 @@ from datetime import datetime, date
 from typing import Optional, List
 from uuid import UUID
 
+# Import NoteResponse for linked notes
+if False:  # TYPE_CHECKING
+    from .note import NoteResponse
+
 
 class DailyNoteCreate(BaseModel):
     """Schema for creating or updating a daily note"""
@@ -27,6 +31,7 @@ class DailyNoteResponse(BaseModel):
     content: Optional[str]
     created_at: datetime
     updated_at: datetime
+    linked_note_ids: Optional[List[UUID]] = Field(default_factory=list, description="IDs of linked notes")
 
     model_config = {"from_attributes": True}
 
