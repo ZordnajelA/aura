@@ -17,9 +17,12 @@ import Image from '@tiptap/extension-image'
 import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import FontFamily from '@tiptap/extension-font-family'
+import Dropcursor from '@tiptap/extension-dropcursor'
+import { FontSize } from '../extensions/FontSize'
 import { SlashCommand } from '../extensions/SlashCommand'
 import BubbleMenu from './BubbleMenu'
 import TableOfContents from './TableOfContents'
+import FloatingMenu from './FloatingMenu'
 import { useEffect, useState } from 'react'
 import './MarkdownEditor.css'
 import 'tippy.js/dist/tippy.css'
@@ -71,6 +74,7 @@ export default function MarkdownEditor({
       TableCell,
       TableHeader,
       TextStyle,
+      FontSize,
       Color,
       Highlight.configure({
         multicolor: true
@@ -85,7 +89,8 @@ export default function MarkdownEditor({
       }),
       Subscript,
       Superscript,
-      FontFamily
+      FontFamily,
+      Dropcursor
     ],
     content: value,
     editorProps: {
@@ -165,6 +170,7 @@ export default function MarkdownEditor({
       ) : (
         <>
           <BubbleMenu editor={editor} />
+          <FloatingMenu editor={editor} />
           <div className="block-editor-wrapper" style={{ height: `${height - 50}px` }}>
             <EditorContent editor={editor} />
           </div>
