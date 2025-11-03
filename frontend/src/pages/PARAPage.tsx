@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import Navigation from '@/components/Navigation'
 import paraService, { Area, Project, Resource, Archive } from '@/services/para'
 import {
-  PlusIcon,
-  FolderIcon,
-  RocketLaunchIcon,
-  BookOpenIcon,
-  ArchiveBoxIcon,
-  PencilIcon,
-  TrashIcon
-} from '@heroicons/react/24/outline'
+  Plus,
+  Folder,
+  Rocket,
+  BookOpen,
+  Archive as ArchiveIcon,
+  Pencil,
+  Trash2
+} from 'lucide-react'
 
 type TabType = 'projects' | 'areas' | 'resources' | 'archives'
 
@@ -148,10 +148,10 @@ export default function PARAPage() {
   }
 
   const tabs = [
-    { id: 'projects', name: 'Projects', icon: RocketLaunchIcon, color: 'text-blue-600' },
-    { id: 'areas', name: 'Areas', icon: FolderIcon, color: 'text-green-600' },
-    { id: 'resources', name: 'Resources', icon: BookOpenIcon, color: 'text-purple-600' },
-    { id: 'archives', name: 'Archives', icon: ArchiveBoxIcon, color: 'text-gray-600' }
+    { id: 'projects', name: 'Projects', icon: Rocket, color: 'text-blue-600' },
+    { id: 'areas', name: 'Areas', icon: Folder, color: 'text-green-600' },
+    { id: 'resources', name: 'Resources', icon: BookOpen, color: 'text-purple-600' },
+    { id: 'archives', name: 'Archives', icon: ArchiveIcon, color: 'text-gray-600' }
   ]
 
   return (
@@ -166,7 +166,7 @@ export default function PARAPage() {
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
               >
-                <PlusIcon className="h-5 w-5" />
+                <Plus className="h-5 w-5" />
                 Add {activeTab.slice(0, -1).charAt(0).toUpperCase() + activeTab.slice(1, -1)}
               </button>
             )}
@@ -368,7 +368,7 @@ function AreaCard({ area, onDelete }: { area: Area; onDelete: (id: string) => vo
           onClick={() => onDelete(area.id)}
           className="text-red-500 hover:text-red-700"
         >
-          <TrashIcon className="h-5 w-5" />
+          <Trash2 className="h-5 w-5" />
         </button>
       </div>
       {area.description && <p className="text-gray-600 text-sm">{area.description}</p>}
@@ -385,7 +385,7 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: (id: s
           onClick={() => onDelete(project.id)}
           className="text-red-500 hover:text-red-700"
         >
-          <TrashIcon className="h-5 w-5" />
+          <Trash2 className="h-5 w-5" />
         </button>
       </div>
       {project.description && <p className="text-gray-600 text-sm mb-2">{project.description}</p>}
@@ -414,7 +414,7 @@ function ResourceCard({ resource, onDelete }: { resource: Resource; onDelete: (i
           onClick={() => onDelete(resource.id)}
           className="text-red-500 hover:text-red-700"
         >
-          <TrashIcon className="h-5 w-5" />
+          <Trash2 className="h-5 w-5" />
         </button>
       </div>
       {resource.content && <p className="text-gray-600 text-sm mb-2">{resource.content}</p>}
@@ -446,7 +446,7 @@ function ArchiveCard({ archive, onDelete }: { archive: Archive; onDelete: (id: s
           onClick={() => onDelete(archive.id)}
           className="text-red-500 hover:text-red-700"
         >
-          <TrashIcon className="h-5 w-5" />
+          <Trash2 className="h-5 w-5" />
         </button>
       </div>
       <p className="text-gray-600 text-sm">
