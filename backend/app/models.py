@@ -113,3 +113,97 @@ class DailyNoteLink(Base):
     # Relationships
     daily_note = relationship("DailyNote", backref="note_links")
     note = relationship("Note", backref="daily_note_links")
+
+
+# PARA Models
+
+class Area(Base):
+    """Model for PARA Areas - ongoing responsibilities"""
+    __tablename__ = "areas"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    icon = Column(String(50), nullable=True)
+    display_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="areas")
+
+
+class ProjectStatus(str, Enum):
+    """Status values for projects"""
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class Project(Base):
+    """Model for PARA Projects - goal-oriented initiatives with deadlines"""
+    __tablename__ = "projects"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    area_id = Column(UUID(as_uuid=True), ForeignKey("areas.id", ondelete="SET NULL"), nullable=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(SQLEnum(ProjectStatus), default=ProjectStatus.ACTIVE, nullable=False)
+    due_date = Column(Date, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="projects")
+    area = relationship("Area", backref="projects")
+
+
+class ResourceType(str, Enum):
+    """Types of resources"""
+    NOTE = "note"
+    BOOKMARK = "bookmark"
+    FILE = "file"
+
+
+class Resource(Base):
+    """Model for PARA Resources - reference materials"""
+    __tablename__ = "resources"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    area_id = Column(UUID(as_uuid=True), ForeignKey("areas.id", ondelete="SET NULL"), nullable=True, index=True)
+    title = Column(String(500), nullable=False)
+    content = Column(Text, nullable=True)
+    resource_type = Column(SQLEnum(ResourceType), default=ResourceType.NOTE, nullable=False)
+    url = Column(String(1000), nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="resources")
+    area = relationship("Area", backref="resources")
+
+
+class ParentType(str, Enum):
+    """Types of parent entities that can be archived"""
+    PROJECT = "project"
+    AREA = "area"
+    RESOURCE = "resource"
+    NOTE = "note"
+
+
+class Archive(Base):
+    """Model for PARA Archives - completed or inactive items"""
+    __tablename__ = "archives"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    parent_type = Column(SQLEnum(ParentType), nullable=False)
+    parent_id = Column(UUID(as_uuid=True), nullable=False)
+    archived_at = Column(DateTime, default=func.now(), nullable=False)
+    metadata = Column(Text, nullable=True)  # JSON metadata stored as text
+
+    # Relationships
+    user = relationship("User", backref="archives")

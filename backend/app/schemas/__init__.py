@@ -24,7 +24,19 @@ from .daily_notes import (
     DailyNoteLinkCreate,
     DailyNoteLinkResponse
 )
+from .para import (
+    AreaCreate,
+    AreaUpdate,
+    AreaResponse,
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectResponse,
+    ResourceCreate,
+    ResourceUpdate,
+    ResourceResponse,
+    ArchiveCreate,
+    ArchiveResponse
+)
 
 # Schemas will be imported here as they are created
-# from .para import AreaCreate, ProjectCreate, ResourceCreate
 # from .chat import ChatMessageCreate, ChatMessageResponse
