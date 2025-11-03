@@ -219,7 +219,7 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
                   key={size}
                   className="size-option"
                   onClick={() => {
-                    editor.chain().focus().setMark('textStyle', { fontSize: size }).run()
+                    editor.chain().focus().setFontSize(size).run()
                     setShowFontSizePicker(false)
                   }}
                 >
