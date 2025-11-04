@@ -2,7 +2,7 @@
 Database models for Aura
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Enum as SQLEnum, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Boolean, BigInteger, Enum as SQLEnum, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -69,6 +69,23 @@ class Note(Base):
 
     # Relationships
     user = relationship("User", backref="notes")
+
+
+class Media(Base):
+    """Model for media files attached to notes"""
+    __tablename__ = "media"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    file_path = Column(String(1000), nullable=False)
+    file_type = Column(String(100), nullable=False)
+    file_size = Column(BigInteger, nullable=True)
+    mime_type = Column(String(100), nullable=True)
+    is_processed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    note = relationship("Note", backref="media_files")
 
 
 class DailyNote(Base):

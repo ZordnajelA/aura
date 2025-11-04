@@ -13,8 +13,8 @@ from .database import init_db
 from . import models  # Import models to register them with SQLAlchemy
 
 # Import routers
-from .api import capture, auth, notes, daily_notes, para
-# from .api import media, links, chat
+from .api import capture, auth, notes, daily_notes, para, media
+# from .api import links, chat
 
 app = FastAPI(
     title=settings.app_name,
@@ -97,6 +97,6 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(notes.router, prefix="/api/notes", tags=["Notes"])
 app.include_router(daily_notes.router, prefix="/api/daily", tags=["Daily Notes"])
 app.include_router(para.router, prefix="/api/para", tags=["PARA"])
-# app.include_router(media.router, prefix="/api/media", tags=["Media"])
+app.include_router(media.router, prefix="/api/media", tags=["Media"])
 # app.include_router(links.router, prefix="/api/links", tags=["Links"])
 # app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
