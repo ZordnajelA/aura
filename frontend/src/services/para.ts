@@ -274,6 +274,76 @@ class PARAService {
   async deleteArchive(archiveId: string): Promise<void> {
     await api.delete(`/para/archives/${archiveId}`)
   }
+
+  // ==========================================================================
+  // NOTE LINKING
+  // ==========================================================================
+
+  /**
+   * Link a note to an area
+   */
+  async linkNoteToArea(areaId: string, noteId: string): Promise<void> {
+    await api.post(`/para/areas/${areaId}/notes/${noteId}`)
+  }
+
+  /**
+   * Unlink a note from an area
+   */
+  async unlinkNoteFromArea(areaId: string, noteId: string): Promise<void> {
+    await api.delete(`/para/areas/${areaId}/notes/${noteId}`)
+  }
+
+  /**
+   * Get all notes linked to an area
+   */
+  async getAreaNotes(areaId: string): Promise<any[]> {
+    const response = await api.get(`/para/areas/${areaId}/notes`)
+    return response.data
+  }
+
+  /**
+   * Link a note to a project
+   */
+  async linkNoteToProject(projectId: string, noteId: string): Promise<void> {
+    await api.post(`/para/projects/${projectId}/notes/${noteId}`)
+  }
+
+  /**
+   * Unlink a note from a project
+   */
+  async unlinkNoteFromProject(projectId: string, noteId: string): Promise<void> {
+    await api.delete(`/para/projects/${projectId}/notes/${noteId}`)
+  }
+
+  /**
+   * Get all notes linked to a project
+   */
+  async getProjectNotes(projectId: string): Promise<any[]> {
+    const response = await api.get(`/para/projects/${projectId}/notes`)
+    return response.data
+  }
+
+  /**
+   * Link a note to a resource
+   */
+  async linkNoteToResource(resourceId: string, noteId: string): Promise<void> {
+    await api.post(`/para/resources/${resourceId}/notes/${noteId}`)
+  }
+
+  /**
+   * Unlink a note from a resource
+   */
+  async unlinkNoteFromResource(resourceId: string, noteId: string): Promise<void> {
+    await api.delete(`/para/resources/${resourceId}/notes/${noteId}`)
+  }
+
+  /**
+   * Get all notes linked to a resource
+   */
+  async getResourceNotes(resourceId: string): Promise<any[]> {
+    const response = await api.get(`/para/resources/${resourceId}/notes`)
+    return response.data
+  }
 }
 
 export const paraService = new PARAService()

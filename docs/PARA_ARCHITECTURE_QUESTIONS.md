@@ -156,19 +156,102 @@ I recommend **Option C** (Resources as Containers) because:
    - Note gets linked to that Resource
    - Resource acts as a curated collection
 
+---
+
+## ✅ DECISION: Option C Implemented (2025-11-04)
+
+**Status**: IMPLEMENTED
+
+Option C has been selected and fully implemented in the backend. This approach treats Resources (and all PARA entities) as organizational containers that link to Notes rather than duplicating content.
+
+### What Was Implemented
+
+#### 1. Database Schema Changes (`database/init.sql`)
+
+Created three new linking tables:
+
+- **`resource_note_links`**: Links resources to notes
+  - Allows resources to act as organizational containers for multiple notes
+  - Unique constraint on (resource_id, note_id)
+
+- **`project_note_links`**: Links projects to notes
+  - Enables goal-oriented organization of notes within projects
+  - Unique constraint on (project_id, note_id)
+
+- **`area_note_links`**: Links areas to notes
+  - Associates notes with ongoing responsibility areas
+  - Unique constraint on (area_id, note_id)
+
+All three tables include:
+- UUID primary keys
+- Foreign keys with CASCADE deletion
+- Timestamps (created_at)
+- Indexed columns for optimal query performance
+
+#### 2. Backend Models (`backend/app/models.py`)
+
+Added three new SQLAlchemy ORM models:
+- `ResourceNoteLink`
+- `ProjectNoteLink`
+- `AreaNoteLink`
+
+Each model includes bidirectional relationships:
+- Resources/Projects/Areas have `note_links` backref
+- Notes have `resource_links`, `project_links`, and `area_links` backrefs
+
+#### 3. API Endpoints (`backend/app/api/`)
+
+**PARA API Endpoints** (`api/para.py`):
+
+*Area-Note Linking*:
+- `POST /para/areas/{area_id}/notes/{note_id}` - Link note to area
+- `DELETE /para/areas/{area_id}/notes/{note_id}` - Unlink note from area
+- `GET /para/areas/{area_id}/notes` - Get all notes in an area
+
+*Project-Note Linking*:
+- `POST /para/projects/{project_id}/notes/{note_id}` - Link note to project
+- `DELETE /para/projects/{project_id}/notes/{note_id}` - Unlink note from project
+- `GET /para/projects/{project_id}/notes` - Get all notes in a project
+
+*Resource-Note Linking*:
+- `POST /para/resources/{resource_id}/notes/{note_id}` - Link note to resource
+- `DELETE /para/resources/{resource_id}/notes/{note_id}` - Unlink note from resource
+- `GET /para/resources/{resource_id}/notes` - Get all notes in a resource
+
+**Notes API Endpoints** (`api/notes.py`):
+
+- `GET /notes/{note_id}/areas` - Get all areas linked to a note
+- `GET /notes/{note_id}/projects` - Get all projects linked to a note
+- `GET /notes/{note_id}/resources` - Get all resources linked to a note
+
+All endpoints include:
+- User authentication and authorization
+- Validation that entities exist and belong to the user
+- Duplicate link prevention (409 Conflict)
+- Proper error handling (404 Not Found)
+
+### Benefits Realized
+
+1. **No Content Duplication**: Notes remain the single source of truth for content
+2. **Flexible Organization**: A single note can belong to multiple Projects/Areas/Resources
+3. **Clear Separation**: PARA entities are organizational structures, Notes are content
+4. **Scalable Architecture**: Easy to query notes by PARA category and vice versa
+5. **Maintains Existing Schema**: Resources table keeps its `content` field for descriptions/purposes
+
 ## TODOs for Integration
 
 ### Phase 2: PARA-Notes Integration
 
-- [ ] **Decision**: Choose which option (A, B, or C) to implement
-- [ ] Create linking table(s) as needed
-- [ ] Update backend models with relationships
-- [ ] Create API endpoints for linking Notes to PARA entities
-  - `POST /api/notes/{note_id}/link-to-project/{project_id}`
-  - `POST /api/notes/{note_id}/link-to-area/{area_id}`
-  - `POST /api/notes/{note_id}/link-to-resource/{resource_id}`
-- [ ] Update Notes page UI to show PARA relationships
-- [ ] Update PARA page UI to show linked Notes
+- [x] **Decision**: Choose which option (A, B, or C) to implement ✅ **Option C Selected**
+- [x] Create linking table(s) as needed ✅ **Completed**
+  - Created `resource_note_links`, `project_note_links`, `area_note_links`
+- [x] Update backend models with relationships ✅ **Completed**
+  - Added `ResourceNoteLink`, `ProjectNoteLink`, `AreaNoteLink` models
+- [x] Create API endpoints for linking Notes to PARA entities ✅ **Completed**
+  - Implemented full CRUD for all three PARA entity types
+  - Endpoints in both `/para/*` and `/notes/*` APIs
+- [ ] **IN PROGRESS**: Update Notes page UI to show PARA relationships
+- [ ] **IN PROGRESS**: Update PARA page UI to show linked Notes
 - [ ] Add "Link to PARA" action in Notes interface
 - [ ] Update Daily Notes to show PARA suggestions
 - [ ] Implement AI PARA suggestions (currently TODO in ai-service)

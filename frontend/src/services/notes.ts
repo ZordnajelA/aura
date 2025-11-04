@@ -63,6 +63,30 @@ class NotesService {
   async deleteNote(noteId: string): Promise<void> {
     await api.delete(`/notes/${noteId}`)
   }
+
+  /**
+   * Get all areas linked to a note
+   */
+  async getNoteAreas(noteId: string): Promise<any[]> {
+    const response = await api.get(`/notes/${noteId}/areas`)
+    return response.data
+  }
+
+  /**
+   * Get all projects linked to a note
+   */
+  async getNoteProjects(noteId: string): Promise<any[]> {
+    const response = await api.get(`/notes/${noteId}/projects`)
+    return response.data
+  }
+
+  /**
+   * Get all resources linked to a note
+   */
+  async getNoteResources(noteId: string): Promise<any[]> {
+    const response = await api.get(`/notes/${noteId}/resources`)
+    return response.data
+  }
 }
 
 export const notesService = new NotesService()
