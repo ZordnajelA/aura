@@ -8,8 +8,9 @@ from typing import List
 from uuid import UUID
 
 from ..database import get_db
-from ..models import Note, User
+from ..models import Note, User, Area, Project, Resource, AreaNoteLink, ProjectNoteLink, ResourceNoteLink
 from ..schemas.note import NoteCreate, NoteUpdate, NoteResponse
+from ..schemas.para import AreaResponse, ProjectResponse, ResourceResponse
 from .dependencies import get_current_user
 
 router = APIRouter()
@@ -192,3 +193,106 @@ async def delete_note(
     db.commit()
 
     return None
+
+
+# ============================================================================
+# NOTE PARA LINKS ENDPOINTS
+# ============================================================================
+
+@router.get("/{note_id}/areas", response_model=List[AreaResponse])
+async def get_note_areas(
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all areas linked to a specific note
+
+    Args:
+        note_id: Note UUID
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        List of areas linked to the note
+    """
+    # Verify note exists and belongs to user
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    # Get all areas linked to this note
+    areas = (
+        db.query(Area)
+        .join(AreaNoteLink, AreaNoteLink.area_id == Area.id)
+        .filter(AreaNoteLink.note_id == note_id, Area.user_id == current_user.id)
+        .all()
+    )
+
+    return areas
+
+
+@router.get("/{note_id}/projects", response_model=List[ProjectResponse])
+async def get_note_projects(
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all projects linked to a specific note
+
+    Args:
+        note_id: Note UUID
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        List of projects linked to the note
+    """
+    # Verify note exists and belongs to user
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    # Get all projects linked to this note
+    projects = (
+        db.query(Project)
+        .join(ProjectNoteLink, ProjectNoteLink.project_id == Project.id)
+        .filter(ProjectNoteLink.note_id == note_id, Project.user_id == current_user.id)
+        .all()
+    )
+
+    return projects
+
+
+@router.get("/{note_id}/resources", response_model=List[ResourceResponse])
+async def get_note_resources(
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all resources linked to a specific note
+
+    Args:
+        note_id: Note UUID
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        List of resources linked to the note
+    """
+    # Verify note exists and belongs to user
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    # Get all resources linked to this note
+    resources = (
+        db.query(Resource)
+        .join(ResourceNoteLink, ResourceNoteLink.resource_id == Resource.id)
+        .filter(ResourceNoteLink.note_id == note_id, Resource.user_id == current_user.id)
+        .all()
+    )
+
+    return resources

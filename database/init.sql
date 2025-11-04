@@ -161,6 +161,36 @@ CREATE TABLE IF NOT EXISTS daily_note_links (
     UNIQUE(daily_note_id, note_id)
 );
 
+-- PARA Note Links: Resource-Note relationships
+-- Resources act as organizational containers that can link to multiple notes
+CREATE TABLE IF NOT EXISTS resource_note_links (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    resource_id UUID NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
+    note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(resource_id, note_id)
+);
+
+-- PARA Note Links: Project-Note relationships
+-- Links notes to projects for goal-oriented organization
+CREATE TABLE IF NOT EXISTS project_note_links (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(project_id, note_id)
+);
+
+-- PARA Note Links: Area-Note relationships
+-- Links notes to areas for ongoing responsibilities
+CREATE TABLE IF NOT EXISTS area_note_links (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    area_id UUID NOT NULL REFERENCES areas(id) ON DELETE CASCADE,
+    note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(area_id, note_id)
+);
+
 -- Chat messages (for the conversational interface)
 CREATE TABLE IF NOT EXISTS chat_messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -194,6 +224,14 @@ CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_note_links_source ON note_links(source_note_id);
 CREATE INDEX idx_note_links_target ON note_links(target_note_id);
 CREATE INDEX idx_chat_messages_user_id ON chat_messages(user_id, created_at DESC);
+
+-- PARA Note Links indexes
+CREATE INDEX idx_resource_note_links_resource ON resource_note_links(resource_id);
+CREATE INDEX idx_resource_note_links_note ON resource_note_links(note_id);
+CREATE INDEX idx_project_note_links_project ON project_note_links(project_id);
+CREATE INDEX idx_project_note_links_note ON project_note_links(note_id);
+CREATE INDEX idx_area_note_links_area ON area_note_links(area_id);
+CREATE INDEX idx_area_note_links_note ON area_note_links(note_id);
 
 -- Full-text search indexes
 CREATE INDEX idx_notes_content_fts ON notes USING gin(to_tsvector('english', content));

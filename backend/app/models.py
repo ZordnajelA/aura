@@ -115,6 +115,50 @@ class DailyNoteLink(Base):
     note = relationship("Note", backref="daily_note_links")
 
 
+# PARA Note Linking Models
+
+class ResourceNoteLink(Base):
+    """Model for resource-to-note relationships"""
+    __tablename__ = "resource_note_links"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    resource_id = Column(UUID(as_uuid=True), ForeignKey("resources.id", ondelete="CASCADE"), nullable=False, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    resource = relationship("Resource", backref="note_links")
+    note = relationship("Note", backref="resource_links")
+
+
+class ProjectNoteLink(Base):
+    """Model for project-to-note relationships"""
+    __tablename__ = "project_note_links"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    project = relationship("Project", backref="note_links")
+    note = relationship("Note", backref="project_links")
+
+
+class AreaNoteLink(Base):
+    """Model for area-to-note relationships"""
+    __tablename__ = "area_note_links"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    area_id = Column(UUID(as_uuid=True), ForeignKey("areas.id", ondelete="CASCADE"), nullable=False, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    area = relationship("Area", backref="note_links")
+    note = relationship("Note", backref="area_links")
+
+
 # PARA Models
 
 class Area(Base):

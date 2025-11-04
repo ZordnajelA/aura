@@ -8,13 +8,14 @@ from typing import List
 from uuid import UUID
 
 from ..database import get_db
-from ..models import Area, Project, Resource, Archive, User
+from ..models import Area, Project, Resource, Archive, User, Note, AreaNoteLink, ProjectNoteLink, ResourceNoteLink
 from ..schemas.para import (
     AreaCreate, AreaUpdate, AreaResponse,
     ProjectCreate, ProjectUpdate, ProjectResponse,
     ResourceCreate, ResourceUpdate, ResourceResponse,
     ArchiveCreate, ArchiveResponse
 )
+from ..schemas.note import NoteResponse
 from .dependencies import get_current_user
 
 router = APIRouter()
@@ -492,3 +493,271 @@ async def delete_archive(
     db.commit()
 
     return None
+
+
+# ============================================================================
+# PARA-NOTE LINKING ENDPOINTS
+# ============================================================================
+
+# Area-Note Links
+@router.post("/areas/{area_id}/notes/{note_id}", status_code=status.HTTP_201_CREATED)
+async def link_note_to_area(
+    area_id: UUID,
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Link a note to an area"""
+    # Verify area exists and belongs to user
+    area = db.query(Area).filter(Area.id == area_id, Area.user_id == current_user.id).first()
+    if not area:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Area not found")
+
+    # Verify note exists and belongs to user
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    # Check if link already exists
+    existing_link = db.query(AreaNoteLink).filter(
+        AreaNoteLink.area_id == area_id,
+        AreaNoteLink.note_id == note_id
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Link already exists")
+
+    # Create the link
+    link = AreaNoteLink(area_id=area_id, note_id=note_id)
+    db.add(link)
+    db.commit()
+
+    return {"message": "Note linked to area successfully", "area_id": str(area_id), "note_id": str(note_id)}
+
+
+@router.delete("/areas/{area_id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unlink_note_from_area(
+    area_id: UUID,
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Unlink a note from an area"""
+    # Verify area belongs to user
+    area = db.query(Area).filter(Area.id == area_id, Area.user_id == current_user.id).first()
+    if not area:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Area not found")
+
+    # Find and delete the link
+    link = db.query(AreaNoteLink).filter(
+        AreaNoteLink.area_id == area_id,
+        AreaNoteLink.note_id == note_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+
+    db.delete(link)
+    db.commit()
+
+    return None
+
+
+@router.get("/areas/{area_id}/notes", response_model=List[NoteResponse])
+async def get_area_notes(
+    area_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all notes linked to an area"""
+    # Verify area belongs to user
+    area = db.query(Area).filter(Area.id == area_id, Area.user_id == current_user.id).first()
+    if not area:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Area not found")
+
+    # Get all notes linked to this area
+    notes = (
+        db.query(Note)
+        .join(AreaNoteLink, AreaNoteLink.note_id == Note.id)
+        .filter(AreaNoteLink.area_id == area_id, Note.user_id == current_user.id)
+        .order_by(Note.created_at.desc())
+        .all()
+    )
+
+    return notes
+
+
+# Project-Note Links
+@router.post("/projects/{project_id}/notes/{note_id}", status_code=status.HTTP_201_CREATED)
+async def link_note_to_project(
+    project_id: UUID,
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Link a note to a project"""
+    # Verify project exists and belongs to user
+    project = db.query(Project).filter(Project.id == project_id, Project.user_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    # Verify note exists and belongs to user
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    # Check if link already exists
+    existing_link = db.query(ProjectNoteLink).filter(
+        ProjectNoteLink.project_id == project_id,
+        ProjectNoteLink.note_id == note_id
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Link already exists")
+
+    # Create the link
+    link = ProjectNoteLink(project_id=project_id, note_id=note_id)
+    db.add(link)
+    db.commit()
+
+    return {"message": "Note linked to project successfully", "project_id": str(project_id), "note_id": str(note_id)}
+
+
+@router.delete("/projects/{project_id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unlink_note_from_project(
+    project_id: UUID,
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Unlink a note from a project"""
+    # Verify project belongs to user
+    project = db.query(Project).filter(Project.id == project_id, Project.user_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    # Find and delete the link
+    link = db.query(ProjectNoteLink).filter(
+        ProjectNoteLink.project_id == project_id,
+        ProjectNoteLink.note_id == note_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+
+    db.delete(link)
+    db.commit()
+
+    return None
+
+
+@router.get("/projects/{project_id}/notes", response_model=List[NoteResponse])
+async def get_project_notes(
+    project_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all notes linked to a project"""
+    # Verify project belongs to user
+    project = db.query(Project).filter(Project.id == project_id, Project.user_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    # Get all notes linked to this project
+    notes = (
+        db.query(Note)
+        .join(ProjectNoteLink, ProjectNoteLink.note_id == Note.id)
+        .filter(ProjectNoteLink.project_id == project_id, Note.user_id == current_user.id)
+        .order_by(Note.created_at.desc())
+        .all()
+    )
+
+    return notes
+
+
+# Resource-Note Links
+@router.post("/resources/{resource_id}/notes/{note_id}", status_code=status.HTTP_201_CREATED)
+async def link_note_to_resource(
+    resource_id: UUID,
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Link a note to a resource"""
+    # Verify resource exists and belongs to user
+    resource = db.query(Resource).filter(Resource.id == resource_id, Resource.user_id == current_user.id).first()
+    if not resource:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+    # Verify note exists and belongs to user
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    # Check if link already exists
+    existing_link = db.query(ResourceNoteLink).filter(
+        ResourceNoteLink.resource_id == resource_id,
+        ResourceNoteLink.note_id == note_id
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Link already exists")
+
+    # Create the link
+    link = ResourceNoteLink(resource_id=resource_id, note_id=note_id)
+    db.add(link)
+    db.commit()
+
+    return {"message": "Note linked to resource successfully", "resource_id": str(resource_id), "note_id": str(note_id)}
+
+
+@router.delete("/resources/{resource_id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unlink_note_from_resource(
+    resource_id: UUID,
+    note_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Unlink a note from a resource"""
+    # Verify resource belongs to user
+    resource = db.query(Resource).filter(Resource.id == resource_id, Resource.user_id == current_user.id).first()
+    if not resource:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+    # Find and delete the link
+    link = db.query(ResourceNoteLink).filter(
+        ResourceNoteLink.resource_id == resource_id,
+        ResourceNoteLink.note_id == note_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+
+    db.delete(link)
+    db.commit()
+
+    return None
+
+
+@router.get("/resources/{resource_id}/notes", response_model=List[NoteResponse])
+async def get_resource_notes(
+    resource_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all notes linked to a resource"""
+    # Verify resource belongs to user
+    resource = db.query(Resource).filter(Resource.id == resource_id, Resource.user_id == current_user.id).first()
+    if not resource:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+    # Get all notes linked to this resource
+    notes = (
+        db.query(Note)
+        .join(ResourceNoteLink, ResourceNoteLink.note_id == Note.id)
+        .filter(ResourceNoteLink.resource_id == resource_id, Note.user_id == current_user.id)
+        .order_by(Note.created_at.desc())
+        .all()
+    )
+
+    return notes
