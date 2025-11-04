@@ -6,16 +6,27 @@ Handles transcription, OCR, summarization, and AI analysis
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import os
 from dotenv import load_dotenv
+
+from processors import (
+    AudioProcessor,
+    ImageProcessor,
+    DocumentProcessor,
+    TextClassifier,
+    ProcessorProvider,
+)
+from services.llm_service import get_llm_service
+from services.rate_limiter import get_rate_limiter
+from config import settings
 
 load_dotenv()
 
 app = FastAPI(
     title="Aura AI Service",
     description="AI processing microservice for media analysis and content extraction",
-    version="0.1.0"
+    version="1.0.0"
 )
 
 # CORS middleware
@@ -31,18 +42,33 @@ app.add_middleware(
 class ProcessingRequest(BaseModel):
     """Request model for processing tasks"""
     file_path: str
-    media_type: str
     options: Optional[Dict[str, Any]] = None
+
+
+class ClassifyRequest(BaseModel):
+    """Request model for text classification"""
+    text: str
+    context: Optional[str] = None
+    user_areas: Optional[List[str]] = None
+    user_projects: Optional[List[str]] = None
+
+
+class ChatRequest(BaseModel):
+    """Request model for chat"""
+    message: str
+    session_id: Optional[str] = None
+    context_notes: Optional[List[str]] = None
 
 
 class ProcessingResponse(BaseModel):
     """Response model for processing results"""
     success: bool
-    media_type: str
-    extracted_text: Optional[str] = None
+    raw_text: Optional[str] = None
     summary: Optional[str] = None
+    key_points: Optional[List[str]] = None
+    extracted_tasks: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
-    suggestions: Optional[Dict[str, Any]] = None
+    confidence_score: Optional[float] = None
     error: Optional[str] = None
 
 
@@ -51,132 +77,188 @@ async def root():
     """Root endpoint"""
     return {
         "service": "Aura AI Service",
-        "version": "0.1.0",
-        "status": "running"
+        "version": "1.0.0",
+        "status": "running",
+        "providers": {
+            "default": settings.default_llm_provider,
+            "gemini_model": settings.gemini_model,
+        }
     }
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy"}
+    rate_limiter = get_rate_limiter(settings.default_llm_provider)
+    usage_stats = rate_limiter.get_usage_stats()
+
+    return {
+        "status": "healthy",
+        "provider": settings.default_llm_provider,
+        "rate_limits": usage_stats,
+    }
 
 
 @app.post("/process/audio", response_model=ProcessingResponse)
-async def process_audio(file: UploadFile = File(...)):
+async def process_audio(request: ProcessingRequest):
     """
     Process audio file: transcribe and analyze
+
+    Args:
+        request: ProcessingRequest with file_path and options
+
+    Returns:
+        ProcessingResponse with transcription and analysis
     """
     try:
-        # TODO: Implement audio transcription using Whisper
-        # TODO: Generate summary
-        # TODO: Extract tasks and ideas
-        # TODO: Generate AI suggestions
+        if not settings.enable_audio_processing:
+            raise HTTPException(
+                status_code=503,
+                detail="Audio processing is disabled"
+            )
 
-        return ProcessingResponse(
-            success=True,
-            media_type="audio",
-            extracted_text="[Transcription will be implemented]",
-            summary="Audio processing not yet implemented",
-            metadata={"filename": file.filename},
-            suggestions={"tasks": [], "projects": []}
-        )
+        processor = AudioProcessor(ProcessorProvider.OPENAI_API)
+        result = await processor.process(request.file_path, request.options)
+
+        return ProcessingResponse(**result.to_dict())
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/process/video", response_model=ProcessingResponse)
+async def process_video(request: ProcessingRequest):
+    """
+    Process video file: extract audio, transcribe and analyze
+    Also handles YouTube URLs
+
+    Args:
+        request: ProcessingRequest with file_path (or YouTube URL) and options
+
+    Returns:
+        ProcessingResponse with transcription and analysis
+    """
+    try:
+        if not settings.enable_video_processing:
+            raise HTTPException(
+                status_code=503,
+                detail="Video processing is disabled"
+            )
+
+        processor = AudioProcessor(ProcessorProvider.OPENAI_API)
+        result = await processor.process(request.file_path, request.options)
+
+        return ProcessingResponse(**result.to_dict())
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/process/image", response_model=ProcessingResponse)
-async def process_image(file: UploadFile = File(...)):
+async def process_image(request: ProcessingRequest):
     """
-    Process image file: OCR and analysis
+    Process image file: OCR and visual analysis
+
+    Args:
+        request: ProcessingRequest with file_path and options
+
+    Returns:
+        ProcessingResponse with OCR text and analysis
     """
     try:
-        # TODO: Implement OCR using Tesseract
-        # TODO: Extract metadata (EXIF)
-        # TODO: Analyze image content
-        # TODO: Generate AI suggestions
+        if not settings.enable_ocr:
+            raise HTTPException(
+                status_code=503,
+                detail="Image processing is disabled"
+            )
 
-        return ProcessingResponse(
-            success=True,
-            media_type="image",
-            extracted_text="[OCR will be implemented]",
-            summary="Image processing not yet implemented",
-            metadata={"filename": file.filename},
-            suggestions={}
-        )
+        processor = ImageProcessor(ProcessorProvider.GEMINI_API)
+        result = await processor.process(request.file_path, request.options)
+
+        return ProcessingResponse(**result.to_dict())
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/process/pdf", response_model=ProcessingResponse)
-async def process_pdf(file: UploadFile = File(...)):
+@app.post("/process/document", response_model=ProcessingResponse)
+async def process_document(request: ProcessingRequest):
     """
-    Process PDF file: extract text and analyze
+    Process document file: extract text and analyze
+    Supports PDF, DOCX, TXT
+
+    Args:
+        request: ProcessingRequest with file_path and options
+
+    Returns:
+        ProcessingResponse with extracted text and analysis
     """
     try:
-        # TODO: Implement PDF text extraction
-        # TODO: Generate summary
-        # TODO: Extract key information
-        # TODO: Generate AI suggestions
+        processor = DocumentProcessor(ProcessorProvider.GEMINI_API)
+        result = await processor.process(request.file_path, request.options)
 
-        return ProcessingResponse(
-            success=True,
-            media_type="pdf",
-            extracted_text="[PDF extraction will be implemented]",
-            summary="PDF processing not yet implemented",
-            metadata={"filename": file.filename},
-            suggestions={}
-        )
+        return ProcessingResponse(**result.to_dict())
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/process/link", response_model=ProcessingResponse)
-async def process_link(request: ProcessingRequest):
+@app.post("/classify", response_model=ProcessingResponse)
+async def classify_text(request: ClassifyRequest):
     """
-    Process web link: scrape content and analyze
+    Classify text content and suggest PARA organization
+
+    Args:
+        request: ClassifyRequest with text and optional context
+
+    Returns:
+        ProcessingResponse with classification and suggestions
     """
     try:
-        # TODO: Implement web scraping
-        # TODO: Extract article text or video transcript
-        # TODO: Generate summary
-        # TODO: Generate AI suggestions
+        options = {
+            "context": request.context,
+            "user_areas": request.user_areas,
+            "user_projects": request.user_projects,
+        }
 
-        return ProcessingResponse(
-            success=True,
-            media_type="link",
-            extracted_text="[Web scraping will be implemented]",
-            summary="Link processing not yet implemented",
-            metadata={"url": request.file_path},
-            suggestions={}
-        )
+        classifier = TextClassifier(ProcessorProvider.GEMINI_API)
+        result = await classifier.process(request.text, options)
+
+        return ProcessingResponse(**result.to_dict())
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/analyze", response_model=ProcessingResponse)
-async def analyze_content(request: ProcessingRequest):
+@app.post("/chat")
+async def chat(request: ChatRequest):
     """
-    Analyze content and generate PARA suggestions
-    Uses LLM to suggest Projects, Areas, Resources, Tasks
+    Chat interface with context awareness
+
+    Args:
+        request: ChatRequest with message, session_id, and context_notes
+
+    Returns:
+        Chat response with suggestions
     """
     try:
-        # TODO: Implement LLM analysis
-        # TODO: Generate PARA suggestions
-        # TODO: Extract tasks
-        # TODO: Suggest linking
+        llm = get_llm_service()
 
-        return ProcessingResponse(
-            success=True,
-            media_type="text",
-            summary="AI analysis not yet implemented",
-            suggestions={
-                "tasks": [],
-                "projects": [],
-                "areas": [],
-                "resources": []
-            }
-        )
+        # Build context from notes if provided
+        context = ""
+        if request.context_notes:
+            context = f"\nContext: User is asking about notes: {', '.join(request.context_notes)}"
+
+        # Generate response
+        prompt = f"{context}\n\nUser: {request.message}\n\nAssistant:"
+        response = await llm.generate(prompt, max_tokens=500, temperature=0.7)
+
+        return {
+            "success": True,
+            "message": response,
+            "session_id": request.session_id,
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

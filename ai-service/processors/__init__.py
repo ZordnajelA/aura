@@ -1,10 +1,21 @@
 """
-Media processors for different file types
+AI Processors - Provider abstraction layer for different processing types
+Supports API-based and local model implementations
 """
 
-# Processors will be implemented here:
-# from .audio_processor import AudioProcessor
-# from .image_processor import ImageProcessor
-# from .pdf_processor import PDFProcessor
-# from .video_processor import VideoProcessor
-# from .link_processor import LinkProcessor
+from .base import BaseProcessor, ProcessingResult, ProcessorError, ProcessorProvider
+from .audio_processor import AudioProcessor
+from .image_processor import ImageProcessor
+from .document_processor import DocumentProcessor
+from .text_classifier import TextClassifier
+
+__all__ = [
+    "BaseProcessor",
+    "ProcessingResult",
+    "ProcessorError",
+    "ProcessorProvider",
+    "AudioProcessor",
+    "ImageProcessor",
+    "DocumentProcessor",
+    "TextClassifier",
+]
