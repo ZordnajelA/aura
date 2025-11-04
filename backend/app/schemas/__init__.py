@@ -37,6 +37,11 @@ from .para import (
     ArchiveCreate,
     ArchiveResponse
 )
+from .media import (
+    MediaUploadResponse,
+    MediaResponse,
+    NoteWithMediaCreate
+)
 
 # Schemas will be imported here as they are created
 # from .chat import ChatMessageCreate, ChatMessageResponse

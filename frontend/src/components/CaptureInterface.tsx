@@ -3,6 +3,7 @@ import { Paperclip, Send, Link as LinkIcon } from 'lucide-react'
 import MarkdownEditor from './MarkdownEditor'
 import notesService from '../services/notes'
 import dailyNotesService from '../services/daily_notes'
+import mediaService from '../services/media'
 
 export default function CaptureInterface() {
   const [input, setInput] = useState('')
@@ -58,45 +59,40 @@ export default function CaptureInterface() {
 
     setError(null)
     setSuccessMessage(null)
+    setIsSubmitting(true)
 
     for (const file of Array.from(files)) {
       try {
-        // Determine note type based on file type
-        let noteType = 'file'
-        if (file.type.startsWith('image/')) noteType = 'image'
-        else if (file.type.startsWith('audio/')) noteType = 'audio'
-        else if (file.type.startsWith('video/')) noteType = 'video'
-        else if (file.type === 'application/pdf') noteType = 'pdf'
-
-        // For now, create a note with file information
-        // TODO: Implement full file upload with media service
-        const response = await notesService.createNote({
-          title: file.name,
-          content: `File upload placeholder: ${file.name} (${file.type}, ${(file.size / 1024).toFixed(2)} KB)`,
-          note_type: noteType
-        })
-        console.log('File note created:', response)
+        // Upload file using media service
+        const mediaResponse = await mediaService.uploadFile(
+          file,
+          file.name,
+          `Uploaded: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`
+        )
+        console.log('File uploaded:', mediaResponse)
 
         // Auto-link to today's daily note if enabled
         if (autoLinkToDaily) {
           try {
-            await dailyNotesService.linkNoteToToday(response.id)
-            setSuccessMessage(`✓ File "${file.name}" note created and linked to today`)
+            await dailyNotesService.linkNoteToToday(mediaResponse.note_id)
+            setSuccessMessage(`✓ File "${file.name}" uploaded and linked to today`)
           } catch (linkErr) {
             console.error('Error linking file to daily note:', linkErr)
-            setSuccessMessage(`✓ File "${file.name}" note created (linking failed)`)
+            setSuccessMessage(`✓ File "${file.name}" uploaded (linking failed)`)
           }
         } else {
-          setSuccessMessage(`✓ File "${file.name}" note created`)
+          setSuccessMessage(`✓ File "${file.name}" uploaded successfully`)
         }
 
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000)
       } catch (err) {
-        console.error('Error creating file note:', err)
-        setError(`Failed to create note for file "${file.name}". Please try again.`)
+        console.error('Error uploading file:', err)
+        setError(`Failed to upload file "${file.name}". Please try again.`)
       }
     }
+
+    setIsSubmitting(false)
 
     // Reset file input
     if (fileInputRef.current) {

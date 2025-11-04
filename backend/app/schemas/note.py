@@ -4,7 +4,7 @@ Pydantic schemas for note functionality
 
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 
@@ -22,6 +22,18 @@ class NoteUpdate(BaseModel):
     note_type: Optional[str] = Field(None, description="Type of note")
 
 
+class MediaInfo(BaseModel):
+    """Schema for media file information in note responses"""
+    id: UUID
+    file_path: str
+    file_type: str
+    file_size: Optional[int]
+    mime_type: Optional[str]
+    url: str
+
+    model_config = {"from_attributes": True}
+
+
 class NoteResponse(BaseModel):
     """Schema for note response"""
     id: UUID
@@ -31,6 +43,7 @@ class NoteResponse(BaseModel):
     note_type: str
     created_at: datetime
     updated_at: datetime
+    media_files: Optional[List[MediaInfo]] = Field(default=None, description="Attached media files")
 
     model_config = {"from_attributes": True}
 

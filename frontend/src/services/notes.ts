@@ -1,5 +1,14 @@
 import api from './api'
 
+export interface MediaInfo {
+  id: string
+  file_path: string
+  file_type: string
+  file_size: number | null
+  mime_type: string | null
+  url: string
+}
+
 export interface Note {
   id: string
   user_id: string
@@ -8,6 +17,7 @@ export interface Note {
   note_type: string
   created_at: string
   updated_at: string
+  media_files?: MediaInfo[]
 }
 
 export interface NoteCreate {
