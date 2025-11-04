@@ -2,7 +2,7 @@
 Pydantic schemas for note functionality
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
@@ -29,9 +29,14 @@ class MediaInfo(BaseModel):
     file_type: str
     file_size: Optional[int]
     mime_type: Optional[str]
-    url: str
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def url(self) -> str:
+        """Compute URL from file_path"""
+        return f"/uploads/{self.file_path}"
 
 
 class NoteResponse(BaseModel):
