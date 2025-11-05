@@ -197,7 +197,7 @@ async def get_processing_results(
             summary=content.summary,
             key_points=json.loads(content.key_points) if content.key_points else [],
             extracted_tasks=json.loads(content.extracted_tasks) if content.extracted_tasks else [],
-            metadata=json.loads(content.metadata) if content.metadata else {},
+            metadata=json.loads(content.processing_metadata) if content.processing_metadata else {},
             confidence_score=content.confidence_score,
             created_at=content.created_at.isoformat(),
         )

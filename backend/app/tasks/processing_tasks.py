@@ -90,7 +90,7 @@ def process_media_task(self, job_id: str):
             summary=result.get("summary"),
             key_points=json.dumps(result.get("key_points", [])),
             extracted_tasks=json.dumps(result.get("extracted_tasks", [])),
-            metadata=json.dumps(result.get("metadata", {})),
+            processing_metadata=json.dumps(result.get("metadata", {})),
             confidence_score=int((result.get("confidence_score", 0.8) * 100)),
         )
         db.add(processed_content)
