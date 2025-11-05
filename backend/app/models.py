@@ -332,7 +332,7 @@ class ProcessedContent(Base):
     summary = Column(Text, nullable=True)
     key_points = Column(Text, nullable=True)  # JSON array stored as text
     extracted_tasks = Column(Text, nullable=True)  # JSON array stored as text
-    metadata = Column(Text, nullable=True)  # JSON stored as text (provider-specific)
+    processing_metadata = Column("metadata", Text, nullable=True)  # Maps to 'metadata' column in DB
     confidence_score = Column(Integer, nullable=True)  # 0-100
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
