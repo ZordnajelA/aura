@@ -268,3 +268,136 @@ class Archive(Base):
 
     # Relationships
     user = relationship("User", backref="archives")
+
+
+# AI Processing Models (Phase 2)
+
+class JobType(str, Enum):
+    """Types of AI processing jobs"""
+    AUDIO = "audio"
+    VIDEO = "video"
+    IMAGE = "image"
+    DOCUMENT = "document"
+    TEXT_CLASSIFICATION = "text_classification"
+
+
+class JobStatus(str, Enum):
+    """Status of processing jobs"""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ProcessingJob(Base):
+    """Model for tracking async AI processing jobs"""
+    __tablename__ = "processing_jobs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    media_id = Column(UUID(as_uuid=True), ForeignKey("media.id", ondelete="CASCADE"), nullable=True, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    job_type = Column(SQLEnum(JobType), nullable=False)
+    status = Column(SQLEnum(JobStatus), default=JobStatus.PENDING, nullable=False)
+    progress = Column(Integer, default=0)  # 0-100
+    error_message = Column(Text, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="processing_jobs")
+    media = relationship("Media", backref="processing_jobs")
+    note = relationship("Note", backref="processing_jobs")
+
+
+class ContentType(str, Enum):
+    """Types of processed content"""
+    TRANSCRIPTION = "transcription"
+    OCR = "ocr"
+    DOCUMENT_TEXT = "document_text"
+    SUMMARY = "summary"
+    CLASSIFICATION = "classification"
+
+
+class ProcessedContent(Base):
+    """Model for storing AI processing results"""
+    __tablename__ = "processed_content"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    processing_job_id = Column(UUID(as_uuid=True), ForeignKey("processing_jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    content_type = Column(SQLEnum(ContentType), nullable=False)
+    raw_text = Column(Text, nullable=True)  # Full extracted text
+    summary = Column(Text, nullable=True)
+    key_points = Column(Text, nullable=True)  # JSON array stored as text
+    extracted_tasks = Column(Text, nullable=True)  # JSON array stored as text
+    metadata = Column(Text, nullable=True)  # JSON stored as text (provider-specific)
+    confidence_score = Column(Integer, nullable=True)  # 0-100
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    note = relationship("Note", backref="processed_content")
+    processing_job = relationship("ProcessingJob", backref="processed_content")
+
+
+class ChatRole(str, Enum):
+    """Roles in chat conversation"""
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"
+
+
+class ChatMessage(Base):
+    """Model for chat interface messages"""
+    __tablename__ = "chat_messages"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    session_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    role = Column(SQLEnum(ChatRole), nullable=False)
+    content = Column(Text, nullable=False)
+    context_notes = Column(Text, nullable=True)  # JSON array of note IDs
+    suggestions = Column(Text, nullable=True)  # JSON array of suggestion objects
+    timestamp = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="chat_messages")
+
+
+class ClassificationType(str, Enum):
+    """Types of content classification"""
+    TASK = "task"
+    LOG_ENTRY = "log_entry"
+    THOUGHT = "thought"
+    MEETING_NOTE = "meeting_note"
+    INVOICE = "invoice"
+    EMAIL = "email"
+    REFERENCE = "reference"
+    OTHER = "other"
+
+
+class Priority(str, Enum):
+    """Priority levels for classified content"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
+class TextClassification(Base):
+    """Model for text classification results"""
+    __tablename__ = "text_classifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    note_id = Column(UUID(as_uuid=True), ForeignKey("notes.id", ondelete="CASCADE"), nullable=False, index=True)
+    classification_type = Column(SQLEnum(ClassificationType), nullable=False)
+    confidence = Column(Integer, nullable=False)  # 0-100
+    suggested_area = Column(String(255), nullable=True)
+    suggested_project = Column(String(255), nullable=True)
+    is_actionable = Column(Boolean, default=False)
+    priority = Column(SQLEnum(Priority), nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    note = relationship("Note", backref="classification")

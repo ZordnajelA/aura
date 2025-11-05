@@ -144,6 +144,44 @@ async def upload_media_file(
     db.refresh(db_media)
     db.refresh(db_note)
 
+    # Automatically trigger AI processing (Phase 2)
+    from ..models import ProcessingJob, JobStatus, JobType
+    from ..tasks.processing_tasks import process_media_task
+
+    # Determine job type from file extension
+    extension = file_extension.lstrip('.').lower()
+    job_type = None
+
+    if extension in ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac']:
+        job_type = JobType.AUDIO
+    elif extension in ['mp4', 'webm', 'avi', 'mov', 'mkv']:
+        job_type = JobType.VIDEO
+    elif extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
+        job_type = JobType.IMAGE
+    elif extension in ['pdf', 'docx', 'doc', 'txt']:
+        job_type = JobType.DOCUMENT
+
+    # Create processing job if file type is supported
+    if job_type and (
+        (job_type == JobType.AUDIO and settings.enable_audio_processing) or
+        (job_type == JobType.VIDEO and settings.enable_video_processing) or
+        (job_type == JobType.IMAGE and settings.enable_ocr) or
+        (job_type == JobType.DOCUMENT)
+    ):
+        processing_job = ProcessingJob(
+            user_id=current_user.id,
+            media_id=db_media.id,
+            note_id=db_note.id,
+            job_type=job_type,
+            status=JobStatus.PENDING,
+        )
+        db.add(processing_job)
+        db.commit()
+        db.refresh(processing_job)
+
+        # Queue Celery task for async processing
+        process_media_task.delay(str(processing_job.id))
+
     # Generate public URL
     media_url = f"/uploads/{relative_path}"
 

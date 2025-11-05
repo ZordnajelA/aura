@@ -58,8 +58,10 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 100
     allowed_extensions: str = "jpg,jpeg,png,gif,pdf,docx,txt,mp3,wav,m4a,mp4,webm"
 
-    # Redis
+    # Redis (for Celery task queue)
     redis_url: str = "redis://localhost:6379/0"
+    redis_host: str = "localhost"
+    redis_port: int = 6379
 
     # Logging
     log_level: str = "INFO"

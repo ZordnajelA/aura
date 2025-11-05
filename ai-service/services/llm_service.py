@@ -6,6 +6,7 @@ Supports: Google Gemini (primary), OpenAI GPT, Anthropic Claude
 from typing import Dict, Any, Optional
 import os
 from config import settings
+from services.rate_limiter import get_rate_limiter
 
 
 class LLMService:
@@ -24,6 +25,7 @@ class LLMService:
         """
         self.provider = provider or settings.default_llm_provider
         self._client = None
+        self._rate_limiter = get_rate_limiter(self.provider)
         self._initialize_client()
 
     def _initialize_client(self):
@@ -74,7 +76,7 @@ class LLMService:
         except ImportError:
             raise ImportError("anthropic not installed. Run: pip install anthropic")
 
-    def generate(
+    async def generate(
         self,
         prompt: str,
         max_tokens: int = 1000,
@@ -93,6 +95,9 @@ class LLMService:
         Returns:
             Generated text response
         """
+        # Apply rate limiting
+        await self._rate_limiter.acquire()
+
         if self.provider == "gemini":
             return self._generate_gemini(prompt, max_tokens, temperature, **kwargs)
         elif self.provider == "openai":
@@ -134,7 +139,7 @@ class LLMService:
         )
         return response.content[0].text
 
-    def analyze_content(self, content: str, content_type: str) -> Dict[str, Any]:
+    async def analyze_content(self, content: str, content_type: str) -> Dict[str, Any]:
         """
         Analyze content and generate PARA suggestions
 
@@ -167,7 +172,7 @@ Respond in JSON format:
 }}"""
 
         try:
-            response = self.generate(prompt, max_tokens=1000, temperature=0.3)
+            response = await self.generate(prompt, max_tokens=1000, temperature=0.3)
 
             # Parse JSON response
             import json
@@ -192,7 +197,7 @@ Respond in JSON format:
                 "error": str(e)
             }
 
-    def summarize(self, content: str, max_length: int = 500) -> str:
+    async def summarize(self, content: str, max_length: int = 500) -> str:
         """
         Generate a concise summary of content
 
@@ -211,9 +216,9 @@ Content:
 
 Summary:"""
 
-        return self.generate(prompt, max_tokens=200, temperature=0.5)
+        return await self.generate(prompt, max_tokens=200, temperature=0.5)
 
-    def extract_tasks(self, content: str) -> list[str]:
+    async def extract_tasks(self, content: str) -> list[str]:
         """
         Extract actionable tasks from content
 
@@ -232,7 +237,7 @@ Content:
 Tasks (JSON array):"""
 
         try:
-            response = self.generate(prompt, max_tokens=300, temperature=0.3)
+            response = await self.generate(prompt, max_tokens=300, temperature=0.3)
 
             # Try to parse JSON array
             import json
