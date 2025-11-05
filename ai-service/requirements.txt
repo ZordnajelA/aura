@@ -3,41 +3,29 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
-# AI and ML - Multiple provider support
+# AI API Clients - Lightweight SDKs only
 google-generativeai==0.3.2  # Primary: Gemini API
-openai==1.3.7               # Optional: OpenAI GPT
+openai==1.3.7               # For Whisper API (cloud-based transcription)
 anthropic==0.7.7            # Optional: Claude
 
-# Audio processing
-openai-whisper==20231117
-librosa==0.10.1
-soundfile==0.12.1
-pydub==0.25.1
+# Image processing - Lightweight
+Pillow==10.1.0              # Image manipulation
+pytesseract==0.3.10         # OCR wrapper (requires system tesseract-ocr)
 
-# Image processing
-Pillow==10.1.0
-pytesseract==0.3.10
-pdf2image==1.16.3
+# PDF and document processing - Pure Python, lightweight
+pypdf==3.17.1               # PDF reading
+PyPDF2==3.0.1               # Backup PDF reader
+python-docx==1.1.0          # DOCX reading
+pdfplumber==0.10.3          # PDF text extraction
 
-# PDF and document processing
-pypdf==3.17.1
-python-docx==1.1.0
-pdfplumber==0.10.3
-
-# Web scraping
+# Web scraping - Lightweight
 beautifulsoup4==4.12.2
 requests==2.31.0
-newspaper3k==0.2.8
+youtube-transcript-api==0.6.1  # YouTube transcripts (no API needed)
 
 # Utilities
 python-dotenv==1.0.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 python-dateutil==2.8.2
-
-# Video processing (optional)
-moviepy==1.0.3
-youtube-transcript-api==0.6.1
-
-# Additional dependencies for Phase 2
-PyPDF2==3.0.1  # Backup PDF reader
+httpx==0.25.2               # For async HTTP requests

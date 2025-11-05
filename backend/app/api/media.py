@@ -154,8 +154,8 @@ async def upload_media_file(
 
     if extension in ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac']:
         job_type = JobType.AUDIO
-    elif extension in ['mp4', 'webm', 'avi', 'mov', 'mkv']:
-        job_type = JobType.VIDEO
+    # Video files not supported (requires heavy moviepy dependency)
+    # For video processing, use YouTube URLs instead
     elif extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
         job_type = JobType.IMAGE
     elif extension in ['pdf', 'docx', 'doc', 'txt']:
@@ -164,7 +164,6 @@ async def upload_media_file(
     # Create processing job if file type is supported
     if job_type and (
         (job_type == JobType.AUDIO and settings.enable_audio_processing) or
-        (job_type == JobType.VIDEO and settings.enable_video_processing) or
         (job_type == JobType.IMAGE and settings.enable_ocr) or
         (job_type == JobType.DOCUMENT)
     ):

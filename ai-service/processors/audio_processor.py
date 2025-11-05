@@ -1,6 +1,8 @@
 """
-Audio/Video Processor - Transcription and analysis
-Supports: Audio files (mp3, wav, m4a, etc.), Video files (mp4, webm), YouTube links
+Audio Processor - Transcription and analysis
+Supports: Audio files (mp3, wav, m4a, etc.), YouTube links
+Note: Direct video file processing not supported (requires heavy moviepy dependency)
+      For videos, use YouTube URLs instead
 """
 
 import os
@@ -16,21 +18,20 @@ from config import settings
 
 class AudioProcessor(BaseProcessor):
     """
-    Audio/Video processor with provider abstraction
+    Audio processor with provider abstraction
 
     Current implementation:
-    - Audio transcription: OpenAI Whisper API (most accurate)
-    - Video: Extract audio � Whisper API
-    - YouTube: youtube-transcript-api + metadata
+    - Audio transcription: OpenAI Whisper API (cloud-based, no heavy dependencies)
+    - YouTube: youtube-transcript-api + metadata (free, no API calls)
     - Analysis: Gemini Flash (free tier)
 
     Future support:
-    - Local Whisper models
+    - Local Whisper models (will require openai-whisper package)
     - Local LLM for analysis
+    - Video file support (will require moviepy package for audio extraction)
     """
 
     SUPPORTED_AUDIO_FORMATS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'wma']
-    SUPPORTED_VIDEO_FORMATS = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv']
 
     def __init__(self, provider: ProcessorProvider = ProcessorProvider.OPENAI_API):
         """Initialize audio processor"""
@@ -38,11 +39,11 @@ class AudioProcessor(BaseProcessor):
         self.llm = get_llm_service()  # For analysis
 
     def get_supported_formats(self) -> List[str]:
-        """Get all supported audio and video formats"""
-        return self.SUPPORTED_AUDIO_FORMATS + self.SUPPORTED_VIDEO_FORMATS
+        """Get all supported audio formats"""
+        return self.SUPPORTED_AUDIO_FORMATS
 
     def validate_file(self, file_path: str) -> bool:
-        """Validate audio/video file exists and has supported format"""
+        """Validate audio file exists and has supported format"""
         path = Path(file_path)
         if not path.exists():
             return False
@@ -56,14 +57,12 @@ class AudioProcessor(BaseProcessor):
         options: Optional[Dict[str, Any]] = None
     ) -> ProcessingResult:
         """
-        Process audio or video file
+        Process audio file or YouTube URL
 
         Args:
-            file_path: Path to audio/video file OR YouTube URL
+            file_path: Path to audio file OR YouTube URL
             options: Optional parameters:
                 - language: Language code for transcription
-                - extract_speakers: Whether to attempt speaker diarization
-                - youtube_url: If this is a YouTube video
 
         Returns:
             ProcessingResult with transcription and analysis
@@ -79,24 +78,8 @@ class AudioProcessor(BaseProcessor):
             if not self.validate_file(file_path):
                 raise ProcessorError(f"Invalid or unsupported file: {file_path}")
 
-            # Check if it's a video file
-            path = Path(file_path)
-            extension = path.suffix.lstrip('.').lower()
-
-            if extension in self.SUPPORTED_VIDEO_FORMATS:
-                # Extract audio from video
-                audio_path = await self._extract_audio_from_video(file_path)
-                transcription = await self._transcribe_audio(audio_path, options)
-
-                # Clean up temporary audio file
-                if audio_path != file_path:
-                    try:
-                        os.remove(audio_path)
-                    except:
-                        pass
-            else:
-                # Direct audio transcription
-                transcription = await self._transcribe_audio(file_path, options)
+            # Direct audio transcription
+            transcription = await self._transcribe_audio(file_path, options)
 
             # Analyze content with LLM
             analysis = await self.llm.analyze_content(transcription, "transcription")
@@ -109,7 +92,7 @@ class AudioProcessor(BaseProcessor):
                 extracted_tasks=analysis.get("tasks", []),
                 metadata={
                     "provider": self.provider.value,
-                    "file_type": extension,
+                    "file_type": Path(file_path).suffix.lstrip('.').lower(),
                     "word_count": len(transcription.split()),
                     "character_count": len(transcription),
                     "is_resource": analysis.get("is_resource", False),
@@ -143,7 +126,7 @@ class AudioProcessor(BaseProcessor):
         Process YouTube video
 
         Uses youtube-transcript-api (free) to get transcript
-        Falls back to audio extraction if transcript unavailable
+        Falls back to error if transcript unavailable
         """
         try:
             # Try to get existing transcript first (free!)
@@ -216,46 +199,6 @@ class AudioProcessor(BaseProcessor):
             "duration": None,
         }
 
-    async def _extract_audio_from_video(self, video_path: str) -> str:
-        """
-        Extract audio track from video file
-
-        Returns:
-            Path to extracted audio file
-        """
-        try:
-            from moviepy.editor import VideoFileClip
-            import tempfile
-
-            # Create temp file for audio
-            temp_audio = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix='.mp3',
-                dir=settings.upload_dir
-            )
-            temp_audio_path = temp_audio.name
-            temp_audio.close()
-
-            # Extract audio
-            video = VideoFileClip(video_path)
-            video.audio.write_audiofile(
-                temp_audio_path,
-                codec='mp3',
-                verbose=False,
-                logger=None
-            )
-            video.close()
-
-            return temp_audio_path
-
-        except ImportError:
-            # moviepy not available, return original path
-            # Will fail at transcription if it's a video file
-            raise ProcessorError(
-                "moviepy not installed. Cannot extract audio from video. "
-                "Install with: pip install moviepy"
-            )
-
     async def _transcribe_audio(
         self,
         audio_path: str,
@@ -264,13 +207,17 @@ class AudioProcessor(BaseProcessor):
         """
         Transcribe audio file using configured provider
 
-        Current implementation: OpenAI Whisper API (most accurate)
+        Current implementation: OpenAI Whisper API (cloud-based, lightweight)
         Future: Support for local Whisper models
         """
         if self.provider == ProcessorProvider.OPENAI_API:
             return await self._transcribe_with_openai_whisper(audio_path, options)
         elif self.provider == ProcessorProvider.LOCAL_WHISPER:
-            return await self._transcribe_with_local_whisper(audio_path, options)
+            raise ProcessorError(
+                "Local Whisper not implemented. To add support:\n"
+                "1. Install: pip install openai-whisper\n"
+                "2. Implement _transcribe_with_local_whisper() method"
+            )
         else:
             raise ProcessorError(f"Unsupported provider for audio: {self.provider}")
 
@@ -279,7 +226,7 @@ class AudioProcessor(BaseProcessor):
         audio_path: str,
         options: Dict[str, Any]
     ) -> str:
-        """Transcribe using OpenAI Whisper API"""
+        """Transcribe using OpenAI Whisper API (cloud-based, no local dependencies)"""
         try:
             from openai import OpenAI
 
@@ -299,18 +246,6 @@ class AudioProcessor(BaseProcessor):
 
         except Exception as e:
             raise ProcessorError(f"OpenAI Whisper transcription failed: {str(e)}")
-
-    async def _transcribe_with_local_whisper(
-        self,
-        audio_path: str,
-        options: Dict[str, Any]
-    ) -> str:
-        """
-        Transcribe using local Whisper model
-
-        Future implementation for offline processing
-        """
-        raise NotImplementedError("Local Whisper not yet implemented")
 
     def _extract_key_points(self, summary: str) -> List[str]:
         """Extract key points from summary text"""

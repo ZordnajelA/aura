@@ -93,14 +93,17 @@ async def start_processing(
 
     if extension in ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac']:
         job_type = JobType.AUDIO
-    elif extension in ['mp4', 'webm', 'avi', 'mov', 'mkv']:
-        job_type = JobType.VIDEO
+    # Video files not supported (requires heavy moviepy dependency)
+    # For video processing, use YouTube URLs instead
     elif extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
         job_type = JobType.IMAGE
     elif extension in ['pdf', 'docx', 'doc', 'txt']:
         job_type = JobType.DOCUMENT
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {extension}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {extension}. For video processing, use YouTube URLs."
+        )
 
     # Create processing job
     job = ProcessingJob(
