@@ -56,7 +56,9 @@ class Settings(BaseSettings):
     # Media Processing
     upload_dir: str = "/app/uploads"
     max_upload_size_mb: int = 100
-    allowed_extensions: str = "jpg,jpeg,png,gif,pdf,docx,txt,mp3,wav,m4a,mp4,webm"
+    # Note: Video files (mp4, webm, etc.) not supported to avoid heavy dependencies
+    # For video processing, use YouTube URLs instead
+    allowed_extensions: str = "jpg,jpeg,png,gif,pdf,docx,txt,mp3,wav,m4a,aac,ogg,flac"
 
     # Redis (for Celery task queue)
     redis_url: str = "redis://localhost:6379/0"

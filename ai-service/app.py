@@ -129,11 +129,13 @@ async def process_audio(request: ProcessingRequest):
 @app.post("/process/video", response_model=ProcessingResponse)
 async def process_video(request: ProcessingRequest):
     """
-    Process video file: extract audio, transcribe and analyze
-    Also handles YouTube URLs
+    Process YouTube video URL (direct video files not supported)
+
+    Note: Direct video file processing requires heavy dependencies (moviepy + CUDA).
+    For now, only YouTube URLs are supported via free transcript API.
 
     Args:
-        request: ProcessingRequest with file_path (or YouTube URL) and options
+        request: ProcessingRequest with YouTube URL and options
 
     Returns:
         ProcessingResponse with transcription and analysis
@@ -143,6 +145,13 @@ async def process_video(request: ProcessingRequest):
             raise HTTPException(
                 status_code=503,
                 detail="Video processing is disabled"
+            )
+
+        # Only YouTube URLs are supported (not video files)
+        if not request.file_path.startswith(('http://', 'https://')):
+            raise HTTPException(
+                status_code=400,
+                detail="Direct video files not supported. Please provide a YouTube URL."
             )
 
         processor = AudioProcessor(ProcessorProvider.OPENAI_API)
