@@ -61,8 +61,9 @@ class Settings(BaseSettings):
     allowed_extensions: str = "jpg,jpeg,png,gif,pdf,docx,txt,mp3,wav,m4a,aac,ogg,flac"
 
     # Redis (for Celery task queue)
-    redis_url: str = "redis://localhost:6379/0"
-    redis_host: str = "localhost"
+    # Use "redis" as hostname in Docker Compose, "localhost" for local development
+    redis_url: str = "redis://redis:6379/0"
+    redis_host: str = "redis"  # Docker service name
     redis_port: int = 6379
 
     # Logging

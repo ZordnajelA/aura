@@ -178,8 +178,14 @@ async def upload_media_file(
         db.commit()
         db.refresh(processing_job)
 
-        # Queue Celery task for async processing
-        process_media_task.delay(str(processing_job.id))
+        # Queue Celery task for async processing (optional - graceful degradation if Redis unavailable)
+        try:
+            process_media_task.delay(str(processing_job.id))
+        except Exception as e:
+            # If Celery/Redis is not available, job remains PENDING
+            # It can be processed manually via /api/processing/start/{media_id} later
+            print(f"Warning: Could not queue processing task (Redis/Celery unavailable): {e}")
+            # Job still created successfully - can be processed later
 
     # Generate public URL
     media_url = f"/uploads/{relative_path}"
