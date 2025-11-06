@@ -192,6 +192,71 @@ export default function AIResultDisplay({
         </div>
       )}
 
+      {/* Invoice details section */}
+      {processedContent?.metadata?.invoice_details && (
+        <div className="space-y-2 pt-3 border-t border-purple-200">
+          <div className="text-xs font-medium text-gray-600 flex items-center gap-1">
+            💰 Invoice Details
+          </div>
+          <div className="bg-white/70 rounded p-3 space-y-2 text-sm">
+            {processedContent.metadata.invoice_details.vendor && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Vendor:</span>
+                <span className="font-medium text-gray-900">{processedContent.metadata.invoice_details.vendor}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.invoice_number && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Invoice #:</span>
+                <span className="font-medium text-gray-900">{processedContent.metadata.invoice_details.invoice_number}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.recipient && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">To:</span>
+                <span className="font-medium text-gray-900">{processedContent.metadata.invoice_details.recipient}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.total_amount && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Amount:</span>
+                <span className="font-bold text-green-700 text-base">{processedContent.metadata.invoice_details.total_amount}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.due_date && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Due Date:</span>
+                <span className="font-medium text-red-600">{processedContent.metadata.invoice_details.due_date}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.payment_method && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Payment Method:</span>
+                <span className="font-medium text-gray-900">{processedContent.metadata.invoice_details.payment_method}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.bank_account && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Account:</span>
+                <span className="font-mono text-sm text-gray-900">{processedContent.metadata.invoice_details.bank_account}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.transfer_reference && (
+              <div className="border-t pt-2 mt-2">
+                <span className="text-gray-600 block mb-1">Transfer Reference:</span>
+                <span className="font-mono text-sm bg-yellow-50 text-yellow-900 px-2 py-1 rounded block">{processedContent.metadata.invoice_details.transfer_reference}</span>
+              </div>
+            )}
+            {processedContent.metadata.invoice_details.additional_notes && (
+              <div className="border-t pt-2 mt-2">
+                <span className="text-gray-600 block mb-1">Notes:</span>
+                <p className="text-xs text-gray-700">{processedContent.metadata.invoice_details.additional_notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Compact summary for compact mode */}
       {compact && summary && (
         <p className="text-xs text-gray-600 line-clamp-2">{summary}</p>

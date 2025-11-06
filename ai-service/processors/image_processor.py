@@ -92,6 +92,13 @@ class ImageProcessor(BaseProcessor):
             # Analyze content for tasks and suggestions
             analysis = await self.llm.analyze_content(combined_text, "image with text") if combined_text.strip() else {}
 
+            # Extract invoice details if this is an invoice/receipt image
+            invoice_data = None
+            document_type = visual_analysis.get("document_type", "").lower()
+            if any(keyword in document_type for keyword in ['invoice', 'receipt', 'bill', 'payment']):
+                if ocr_text.strip():  # Only extract if we have OCR text
+                    invoice_data = await self.llm.extract_invoice_details(ocr_text)
+
             return ProcessingResult(
                 success=True,
                 raw_text=ocr_text if ocr_text.strip() else visual_analysis.get("description", ""),
@@ -106,6 +113,7 @@ class ImageProcessor(BaseProcessor):
                     "has_text": bool(ocr_text.strip()),
                     "word_count": len(ocr_text.split()) if ocr_text else 0,
                     "visual_elements": visual_analysis.get("elements", []),
+                    "invoice_details": invoice_data,
                     "is_resource": analysis.get("is_resource", False),
                     "suggested_projects": analysis.get("projects", []),
                     "suggested_areas": analysis.get("areas", []),
