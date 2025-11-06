@@ -128,7 +128,7 @@ services:
         condition: service_started
     networks:
       - aura-network
-    command: celery -A app.celery_app worker --loglevel=info
+    command: celery -A app.tasks.celery_app worker --loglevel=info
 
   # AI Processing Service
   ai-service:
