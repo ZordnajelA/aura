@@ -1,13 +1,15 @@
 import { useState, useRef } from 'react'
-import { Paperclip, Send, Link as LinkIcon } from 'lucide-react'
+import { Paperclip, Send, Link as LinkIcon, Brain } from 'lucide-react'
 import MarkdownEditor from './MarkdownEditor'
 import notesService from '../services/notes'
 import dailyNotesService from '../services/daily_notes'
 import mediaService from '../services/media'
+import processingService from '../services/processing'
 
 export default function CaptureInterface() {
   const [input, setInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isClassifying, setIsClassifying] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [autoLinkToDaily, setAutoLinkToDaily] = useState(true)
@@ -42,6 +44,18 @@ export default function CaptureInterface() {
       }
 
       setInput('')
+
+      // Trigger AI classification in the background
+      setIsClassifying(true)
+      try {
+        await processingService.classifyNote(response.id)
+        console.log('Classification started for note:', response.id)
+      } catch (classifyErr) {
+        console.error('Error triggering classification:', classifyErr)
+        // Don't show error to user - classification is a background process
+      } finally {
+        setIsClassifying(false)
+      }
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000)
@@ -84,6 +98,18 @@ export default function CaptureInterface() {
           setSuccessMessage(`✓ File "${file.name}" uploaded successfully`)
         }
 
+        // Trigger AI processing for media file in the background
+        setIsClassifying(true)
+        try {
+          await processingService.startProcessing(mediaResponse.id)
+          console.log('Processing started for media:', mediaResponse.id)
+        } catch (processErr) {
+          console.error('Error triggering processing:', processErr)
+          // Don't show error to user - processing is a background process
+        } finally {
+          setIsClassifying(false)
+        }
+
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000)
       } catch (err) {
@@ -122,6 +148,12 @@ export default function CaptureInterface() {
         {successMessage && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
             {successMessage}
+          </div>
+        )}
+        {isClassifying && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded flex items-center gap-2">
+            <Brain className="w-4 h-4 animate-pulse" />
+            <span>AI is analyzing your note...</span>
           </div>
         )}
       </div>

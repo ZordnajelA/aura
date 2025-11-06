@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Plus, Loader2, ChevronLeft, ChevronRight, Link as LinkIcon, X, FileText, Image, FileAudio, FileVideo, File, Link2 } from 'lucide-react'
+import { Calendar, Plus, Loader2, ChevronLeft, ChevronRight, Link as LinkIcon, X, FileText, Image, FileAudio, FileVideo, File, Link2, ChevronDown, ChevronUp } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 import CalendarView from '@/components/CalendarView'
 import MarkdownEditor from '@/components/MarkdownEditor'
+import AIResultDisplay from '@/components/AIResultDisplay'
 import dailyNotesService, { DailyNote } from '@/services/daily_notes'
 import notesService, { Note } from '@/services/notes'
+import processingService from '@/services/processing'
+import type { TextClassification, ProcessedContent } from '@/types'
 
 const NOTE_TYPE_ICONS = {
   text: FileText,
@@ -40,6 +43,7 @@ export default function DailyNotesPage() {
   const [showCalendar, setShowCalendar] = useState(true)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [datesWithNotes, setDatesWithNotes] = useState<Set<string>>(new Set())
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadDailyNotes()
@@ -240,6 +244,18 @@ export default function DailyNotesPage() {
     return NOTE_TYPE_COLORS[noteType as keyof typeof NOTE_TYPE_COLORS] || 'bg-gray-100 text-gray-700'
   }
 
+  const toggleNoteExpansion = (noteId: string) => {
+    setExpandedNotes(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(noteId)) {
+        newSet.delete(noteId)
+      } else {
+        newSet.add(noteId)
+      }
+      return newSet
+    })
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <Navigation />
@@ -357,35 +373,18 @@ export default function DailyNotesPage() {
                     No linked notes yet. Link notes to organize related content.
                   </p>
                 ) : (
-                  <div className="space-y-2">
-                    {linkedNotes.map((note) => {
-                      const Icon = getNoteIcon(note.note_type)
-                      return (
-                        <div
-                          key={note.id}
-                          className="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${getNoteColor(note.note_type)}`}>
-                                <Icon className="w-3.5 h-3.5" />
-                                {note.note_type}
-                              </div>
-                            </div>
-                            <h4 className="font-medium text-gray-900">{note.title || 'Untitled'}</h4>
-                            <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                              {note.content}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleUnlinkNote(note.id)}
-                            className="ml-3 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )
-                    })}
+                  <div className="space-y-3">
+                    {linkedNotes.map((note) => (
+                      <LinkedNoteItem
+                        key={note.id}
+                        note={note}
+                        isExpanded={expandedNotes.has(note.id)}
+                        onToggleExpand={() => toggleNoteExpansion(note.id)}
+                        onUnlink={() => handleUnlinkNote(note.id)}
+                        getNoteIcon={getNoteIcon}
+                        getNoteColor={getNoteColor}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -471,6 +470,107 @@ export default function DailyNotesPage() {
               )}
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Linked Note Item Component with AI Results
+interface LinkedNoteItemProps {
+  note: Note
+  isExpanded: boolean
+  onToggleExpand: () => void
+  onUnlink: () => void
+  getNoteIcon: (noteType: string) => any
+  getNoteColor: (noteType: string) => string
+}
+
+function LinkedNoteItem({ note, isExpanded, onToggleExpand, onUnlink, getNoteIcon, getNoteColor }: LinkedNoteItemProps) {
+  const [classification, setClassification] = useState<TextClassification | null>(null)
+  const [processedContent, setProcessedContent] = useState<ProcessedContent | null>(null)
+  const [isLoadingAI, setIsLoadingAI] = useState(false)
+
+  const Icon = getNoteIcon(note.note_type)
+
+  useEffect(() => {
+    if (isExpanded) {
+      loadAIResults()
+    }
+  }, [isExpanded, note.id])
+
+  const loadAIResults = async () => {
+    setIsLoadingAI(true)
+    try {
+      const [classificationResult, processedResults] = await Promise.all([
+        processingService.getClassification(note.id),
+        processingService.getProcessingResults(note.id)
+      ])
+
+      setClassification(classificationResult)
+      if (processedResults.length > 0) {
+        setProcessedContent(processedResults[0])
+      }
+    } catch (err) {
+      console.error('Error loading AI results:', err)
+    } finally {
+      setIsLoadingAI(false)
+    }
+  }
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      {/* Note Header */}
+      <div className="flex items-start justify-between p-3 bg-white hover:bg-gray-50 transition-colors">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${getNoteColor(note.note_type)}`}>
+              <Icon className="w-3.5 h-3.5" />
+              {note.note_type}
+            </div>
+          </div>
+          <h4 className="font-medium text-gray-900">{note.title || 'Untitled'}</h4>
+          <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+            {note.content}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 ml-3">
+          <button
+            onClick={onToggleExpand}
+            className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+            aria-label={isExpanded ? 'Collapse' : 'Expand'}
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={onUnlink}
+            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+            aria-label="Unlink note"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded Content with AI Results */}
+      {isExpanded && (
+        <div className="border-t bg-gray-50 p-3">
+          {isLoadingAI ? (
+            <div className="flex items-center gap-2 text-blue-700 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Loading AI analysis...</span>
+            </div>
+          ) : (classification || processedContent) ? (
+            <AIResultDisplay
+              classification={classification}
+              processedContent={processedContent}
+              compact={false}
+            />
+          ) : (
+            <p className="text-sm text-gray-500 text-center py-2">
+              No AI analysis available for this note.
+            </p>
+          )}
         </div>
       )}
     </div>

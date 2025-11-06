@@ -3,7 +3,10 @@ import { FileText, Image, FileAudio, FileVideo, File, Link2, Loader2, Trash2, Ed
 import Navigation from '@/components/Navigation'
 import MarkdownEditor from '@/components/MarkdownEditor'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
+import AIResultDisplay from '@/components/AIResultDisplay'
 import notesService, { Note } from '@/services/notes'
+import processingService from '@/services/processing'
+import type { TextClassification, ProcessedContent } from '@/types'
 
 const NOTE_TYPE_ICONS = {
   text: FileText,
@@ -275,11 +278,37 @@ interface NoteDetailModalProps {
 function NoteDetailModal({ note, isEditing, onClose, onEdit, onSave, onDelete }: NoteDetailModalProps) {
   const [editTitle, setEditTitle] = useState(note.title || '')
   const [editContent, setEditContent] = useState(note.content || '')
+  const [classification, setClassification] = useState<TextClassification | null>(null)
+  const [processedContent, setProcessedContent] = useState<ProcessedContent | null>(null)
+  const [isLoadingAI, setIsLoadingAI] = useState(false)
 
   useEffect(() => {
     setEditTitle(note.title || '')
     setEditContent(note.content || '')
+
+    // Load AI results for this note
+    loadAIResults()
   }, [note])
+
+  const loadAIResults = async () => {
+    setIsLoadingAI(true)
+    try {
+      // Fetch classification
+      const classificationResult = await processingService.getClassification(note.id)
+      setClassification(classificationResult)
+
+      // Fetch processed content (for media files)
+      const processedResults = await processingService.getProcessingResults(note.id)
+      if (processedResults.length > 0) {
+        setProcessedContent(processedResults[0]) // Use the first result
+      }
+    } catch (err) {
+      console.error('Error loading AI results:', err)
+      // Silent fail - AI results are optional
+    } finally {
+      setIsLoadingAI(false)
+    }
+  }
 
   const handleSave = () => {
     onSave(note.id, editTitle, editContent)
@@ -381,6 +410,22 @@ function NoteDetailModal({ note, isEditing, onClose, onEdit, onSave, onDelete }:
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">{note.title}</h3>
                 </div>
               )}
+
+              {/* AI Results Section */}
+              {(classification || processedContent) && (
+                <AIResultDisplay
+                  classification={classification}
+                  processedContent={processedContent}
+                />
+              )}
+
+              {isLoadingAI && !classification && !processedContent && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-2 text-blue-700">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading AI analysis...</span>
+                </div>
+              )}
+
               <div className="prose max-w-none">
                 <MarkdownRenderer content={note.content || ''} className="text-gray-700" />
               </div>
