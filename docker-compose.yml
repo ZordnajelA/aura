@@ -90,6 +90,46 @@ services:
       - aura-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  # Celery Worker (for async AI processing tasks)
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aura-celery-worker
+    environment:
+      # Application
+      APP_NAME: ${APP_NAME:-Aura}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+
+      # Database
+      DATABASE_URL: ${DATABASE_URL}
+
+      # AI APIs
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-gemini}
+
+      # Services
+      AI_SERVICE_URL: ${AI_SERVICE_URL}
+      REDIS_URL: ${REDIS_URL}
+
+      # Media
+      UPLOAD_DIR: ${UPLOAD_DIR}
+    volumes:
+      - ./backend:/app
+      - uploads-data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    networks:
+      - aura-network
+    command: celery -A app.celery_app worker --loglevel=info
+
   # AI Processing Service
   ai-service:
     build:
@@ -99,7 +139,8 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-gemini}
       WHISPER_MODEL: ${WHISPER_MODEL}
       UPLOAD_DIR: ${UPLOAD_DIR}
     ports:
