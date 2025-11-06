@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     default_llm_provider: str = "gemini"    # Options: gemini, openai, anthropic
 
     # Provider-specific models
-    gemini_model: str = "gemini-2.0-flash-exp"  # Free tier: gemini-2.0-flash-exp, gemini-1.5-flash
-    gemini_vision_model: str = "gemini-2.0-flash-exp"  # For image analysis
+    gemini_model: str = "gemini-2.5-flash"  # Latest: gemini-2.5-flash (preview)
+    gemini_vision_model: str = "gemini-2.5-flash"  # For image analysis
     openai_model: str = "gpt-4-turbo-preview"
     anthropic_model: str = "claude-3-5-sonnet-20241022"
 
