@@ -58,8 +58,50 @@ export interface ChatMessage {
 
 export interface ProcessingJob {
   id: string
-  noteId: string
+  note_id: string
+  media_id?: string
+  job_type: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   progress: number
-  result?: any
+  error_message?: string
+  started_at?: string
+  completed_at?: string
+  created_at: string
+}
+
+export interface ProcessedContent {
+  id: string
+  note_id: string
+  content_type: string
+  raw_text?: string
+  summary?: string
+  key_points: string[]
+  extracted_tasks: string[]
+  metadata: Record<string, any>
+  confidence_score?: number
+  created_at: string
+}
+
+export type ClassificationType =
+  | 'task'
+  | 'log_entry'
+  | 'thought'
+  | 'meeting_note'
+  | 'invoice'
+  | 'email'
+  | 'reference'
+  | 'other'
+
+export type Priority = 'low' | 'medium' | 'high' | 'urgent'
+
+export interface TextClassification {
+  id: string
+  note_id: string
+  classification_type: ClassificationType
+  confidence: number
+  suggested_area?: string
+  suggested_project?: string
+  is_actionable: boolean
+  priority?: Priority
+  created_at: string
 }

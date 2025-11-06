@@ -14,6 +14,7 @@ from ..models import (
     User,
     ProcessingJob,
     ProcessedContent,
+    TextClassification,
     Media,
     Note,
     JobStatus,
@@ -56,6 +57,22 @@ class ProcessedContentResponse(BaseModel):
     extracted_tasks: List[str]
     metadata: dict
     confidence_score: Optional[int]
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class TextClassificationResponse(BaseModel):
+    """Response model for text classification"""
+    id: str
+    note_id: str
+    classification_type: str
+    confidence: int
+    suggested_area: Optional[str]
+    suggested_project: Optional[str]
+    is_actionable: bool
+    priority: Optional[str]
     created_at: str
 
     class Config:
@@ -285,3 +302,45 @@ async def classify_note(
         "task_id": task.id,
         "message": "Classification started",
     }
+
+
+@router.get("/classification/{note_id}", response_model=Optional[TextClassificationResponse])
+async def get_classification(
+    note_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get classification results for a note
+
+    Returns:
+        TextClassification if available, None otherwise
+    """
+    # Verify note ownership
+    note = db.query(Note).filter(
+        Note.id == note_id,
+        Note.user_id == current_user.id
+    ).first()
+
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    # Get classification
+    classification = db.query(TextClassification).filter(
+        TextClassification.note_id == note_id
+    ).first()
+
+    if not classification:
+        return None
+
+    return TextClassificationResponse(
+        id=str(classification.id),
+        note_id=str(classification.note_id),
+        classification_type=classification.classification_type.value,
+        confidence=classification.confidence,
+        suggested_area=classification.suggested_area,
+        suggested_project=classification.suggested_project,
+        is_actionable=classification.is_actionable,
+        priority=classification.priority.value if classification.priority else None,
+        created_at=classification.created_at.isoformat(),
+    )
