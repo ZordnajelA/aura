@@ -77,23 +77,31 @@ class TextClassifier(BaseProcessor):
             if classification.get("is_actionable"):
                 tasks = await self.llm.extract_tasks(text)
 
+            # Build metadata
+            metadata = {
+                "provider": self.provider.value,
+                "classification_type": classification.get("type"),
+                "is_actionable": classification.get("is_actionable", False),
+                "priority": classification.get("priority"),
+                "suggested_area": classification.get("suggested_area"),
+                "suggested_project": classification.get("suggested_project"),
+                "is_resource": classification.get("is_resource", False),
+                "requires_followup": classification.get("requires_followup", False),
+                "sentiment": classification.get("sentiment"),
+            }
+
+            # Extract invoice details if classified as invoice
+            if classification.get("type") == "invoice":
+                invoice_details = await self.llm.extract_invoice_details(text)
+                metadata["invoice_details"] = invoice_details
+
             return ProcessingResult(
                 success=True,
                 raw_text=text,
                 summary=summary,
                 key_points=classification.get("key_points", []),
                 extracted_tasks=tasks,
-                metadata={
-                    "provider": self.provider.value,
-                    "classification_type": classification.get("type"),
-                    "is_actionable": classification.get("is_actionable", False),
-                    "priority": classification.get("priority"),
-                    "suggested_area": classification.get("suggested_area"),
-                    "suggested_project": classification.get("suggested_project"),
-                    "is_resource": classification.get("is_resource", False),
-                    "requires_followup": classification.get("requires_followup", False),
-                    "sentiment": classification.get("sentiment"),
-                },
+                metadata=metadata,
                 confidence_score=classification.get("confidence", 0.8),
             )
 

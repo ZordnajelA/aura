@@ -260,6 +260,82 @@ Tasks (JSON array in English):"""
             return []
 
 
+    async def extract_invoice_details(self, content: str) -> dict[str, any]:
+        """
+        Extract structured invoice/payment information from content
+
+        Args:
+            content: Text content from invoice or payment notice
+
+        Returns:
+            Dictionary with invoice details
+        """
+        prompt = f"""Extract detailed invoice/payment information from the following content.
+
+IMPORTANT: All extracted text must be in English. Translate field values if necessary.
+
+Content:
+{content}
+
+Extract the following information:
+1. Vendor/Company - The entity sending the invoice
+2. Invoice Number - Invoice, contract, or reference number
+3. Recipient - To whom the invoice is addressed
+4. Total Amount - Total amount to be paid (include currency)
+5. Due Date - When payment is due
+6. Payment Method - Method of payment (bank transfer, credit card, etc.)
+7. Bank Account Number - If bank transfer, the account number
+8. Transfer Reference - What should be included in the transfer reference field
+9. Additional Notes - Any other important payment information
+
+Respond ONLY in JSON format:
+{{
+    "vendor": "Company name",
+    "invoice_number": "INV-12345 or contract number",
+    "recipient": "Name or company addressed to",
+    "total_amount": "Amount with currency (e.g., $150.00, €200.00)",
+    "due_date": "YYYY-MM-DD or readable date",
+    "payment_method": "Bank transfer, Credit card, etc.",
+    "bank_account": "Account number if applicable",
+    "transfer_reference": "Reference text to include in transfer",
+    "additional_notes": "Any other important details",
+    "currency": "USD, EUR, GBP, etc.",
+    "confidence": 0.0-1.0
+}}
+
+If any field is not found, use null. All text must be in English."""
+
+        try:
+            response = await self.generate(prompt, max_tokens=500, temperature=0.1)
+
+            # Parse JSON response
+            import json
+            if "```json" in response:
+                response = response.split("```json")[1].split("```")[0].strip()
+            elif "```" in response:
+                response = response.split("```")[1].split("```")[0].strip()
+
+            result = json.loads(response)
+            return result
+
+        except Exception as e:
+            print(f"Error extracting invoice details: {e}")
+            return {
+                "vendor": None,
+                "invoice_number": None,
+                "recipient": None,
+                "total_amount": None,
+                "due_date": None,
+                "payment_method": None,
+                "bank_account": None,
+                "transfer_reference": None,
+                "additional_notes": None,
+                "currency": None,
+                "confidence": 0.0,
+                "error": str(e)
+            }
+
+
 # Singleton instance
 _llm_service = None
 

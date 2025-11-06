@@ -92,10 +92,10 @@ class DocumentProcessor(BaseProcessor):
             # Analyze content with LLM
             analysis = await self.llm.analyze_content(extracted_text, f"{doc_type} document")
 
-            # Extract invoice/receipt data if requested
+            # Extract invoice/receipt data if detected
             invoice_data = None
-            if options.get('detect_invoice') and doc_type in ['invoice', 'receipt']:
-                invoice_data = await self._extract_invoice_data(extracted_text)
+            if doc_type in ['invoice', 'receipt', 'bill']:
+                invoice_data = await self.llm.extract_invoice_details(extracted_text)
 
             return ProcessingResult(
                 success=True,
