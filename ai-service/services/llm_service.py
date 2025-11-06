@@ -152,6 +152,8 @@ class LLMService:
         """
         prompt = f"""Analyze the following {content_type} content and provide:
 
+IMPORTANT: Respond in English only, regardless of the input language. All output must be in English.
+
 1. A concise summary (~500 characters)
 2. Extracted tasks or action items (if any)
 3. Relevant project suggestions
@@ -211,10 +213,12 @@ Respond in JSON format:
         prompt = f"""Provide a concise summary of the following content in approximately {max_length} characters.
 Focus on the main points and key information.
 
+IMPORTANT: Respond in English only, regardless of the input language.
+
 Content:
 {content}
 
-Summary:"""
+Summary (in English):"""
 
         return await self.generate(prompt, max_tokens=200, temperature=0.5)
 
@@ -231,10 +235,12 @@ Summary:"""
         prompt = f"""Extract all actionable tasks or to-do items from the following content.
 Return ONLY a JSON array of task strings, nothing else.
 
+IMPORTANT: All tasks must be in English, regardless of the input language.
+
 Content:
 {content}
 
-Tasks (JSON array):"""
+Tasks (JSON array in English):"""
 
         try:
             response = await self.generate(prompt, max_tokens=300, temperature=0.3)
