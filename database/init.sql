@@ -49,16 +49,8 @@ CREATE TABLE IF NOT EXISTS media (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Processed content from media (OCR, transcription, etc.)
-CREATE TABLE IF NOT EXISTS processed_content (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    media_id UUID REFERENCES media(id) ON DELETE CASCADE,
-    extracted_text TEXT,
-    summary TEXT,
-    metadata JSONB,
-    embeddings VECTOR(1536), -- For semantic search (requires pgvector extension)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Phase 2: Processed content from AI processing
+-- NOTE: Old table structure removed, new one created below with processing_jobs
 
 -- PARA: Areas
 CREATE TABLE IF NOT EXISTS areas (
@@ -191,27 +183,63 @@ CREATE TABLE IF NOT EXISTS area_note_links (
     UNIQUE(area_id, note_id)
 );
 
--- Chat messages (for the conversational interface)
+-- =================================================================
+-- PHASE 2: AI PROCESSING TABLES
+-- =================================================================
+
+-- Processing jobs - tracks async AI processing tasks
+CREATE TABLE IF NOT EXISTS processing_jobs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    media_id UUID REFERENCES media(id) ON DELETE CASCADE,
+    note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    job_type VARCHAR(50) NOT NULL, -- audio, video, image, document, text_classification
+    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- pending, processing, completed, failed
+    progress INTEGER NOT NULL DEFAULT 0, -- 0-100
+    error_message TEXT,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Processed content - stores AI processing results
+CREATE TABLE IF NOT EXISTS processed_content (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    processing_job_id UUID NOT NULL REFERENCES processing_jobs(id) ON DELETE CASCADE,
+    content_type VARCHAR(50) NOT NULL, -- transcription, ocr, document_text, summary, classification
+    raw_text TEXT,
+    summary TEXT,
+    key_points TEXT, -- JSON array stored as text
+    extracted_tasks TEXT, -- JSON array stored as text
+    metadata TEXT, -- JSON stored as text
+    confidence_score INTEGER, -- 0-100
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Chat messages - conversational AI interface
 CREATE TABLE IF NOT EXISTS chat_messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL, -- user, assistant, system
+    session_id UUID NOT NULL,
+    role VARCHAR(50) NOT NULL, -- user, assistant, system
     content TEXT NOT NULL,
-    metadata JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    context_notes TEXT, -- JSON array of note IDs
+    suggestions TEXT, -- JSON array of suggestion objects
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Processing jobs (track AI processing status)
-CREATE TABLE IF NOT EXISTS processing_jobs (
+-- Text classifications - AI-powered content classification
+CREATE TABLE IF NOT EXISTS text_classifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    note_id UUID REFERENCES notes(id) ON DELETE CASCADE,
-    media_id UUID REFERENCES media(id) ON DELETE CASCADE,
-    status VARCHAR(50) DEFAULT 'pending', -- pending, processing, completed, failed
-    progress INTEGER DEFAULT 0,
-    result JSONB,
-    error_message TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    classification_type VARCHAR(50) NOT NULL, -- task, log_entry, thought, meeting_note, invoice, email, reference, other
+    confidence INTEGER NOT NULL, -- 0-100
+    suggested_area VARCHAR(255),
+    suggested_project VARCHAR(255),
+    is_actionable BOOLEAN NOT NULL DEFAULT FALSE,
+    priority VARCHAR(50), -- low, medium, high, urgent
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for performance
@@ -223,7 +251,17 @@ CREATE INDEX idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_note_links_source ON note_links(source_note_id);
 CREATE INDEX idx_note_links_target ON note_links(target_note_id);
-CREATE INDEX idx_chat_messages_user_id ON chat_messages(user_id, created_at DESC);
+
+-- Phase 2 indexes
+CREATE INDEX idx_processing_jobs_user_id ON processing_jobs(user_id);
+CREATE INDEX idx_processing_jobs_media_id ON processing_jobs(media_id);
+CREATE INDEX idx_processing_jobs_note_id ON processing_jobs(note_id);
+CREATE INDEX idx_processing_jobs_status ON processing_jobs(status);
+CREATE INDEX idx_processed_content_note_id ON processed_content(note_id);
+CREATE INDEX idx_processed_content_job_id ON processed_content(processing_job_id);
+CREATE INDEX idx_chat_messages_user_id ON chat_messages(user_id);
+CREATE INDEX idx_chat_messages_session_id ON chat_messages(session_id);
+CREATE INDEX idx_text_classifications_note_id ON text_classifications(note_id);
 
 -- PARA Note Links indexes
 CREATE INDEX idx_resource_note_links_resource ON resource_note_links(resource_id);
