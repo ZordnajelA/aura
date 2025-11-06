@@ -13,7 +13,7 @@ const processingService = {
    * Start processing for a media file
    */
   async startProcessing(mediaId: string): Promise<{ success: boolean; job_id: string; status: string; message: string }> {
-    const response = await apiClient.post(`/api/processing/start/${mediaId}`)
+    const response = await apiClient.post(`/processing/start/${mediaId}`)
     return response.data
   },
 
@@ -21,7 +21,7 @@ const processingService = {
    * Get status of a processing job
    */
   async getJobStatus(jobId: string): Promise<ProcessingJob> {
-    const response = await apiClient.get(`/api/processing/status/${jobId}`)
+    const response = await apiClient.get(`/processing/status/${jobId}`)
     return response.data
   },
 
@@ -29,7 +29,7 @@ const processingService = {
    * Get all processing results for a note
    */
   async getProcessingResults(noteId: string): Promise<ProcessedContent[]> {
-    const response = await apiClient.get(`/api/processing/results/${noteId}`)
+    const response = await apiClient.get(`/processing/results/${noteId}`)
     return response.data
   },
 
@@ -37,7 +37,7 @@ const processingService = {
    * Trigger text classification for a note
    */
   async classifyNote(noteId: string): Promise<{ success: boolean; task_id: string; message: string }> {
-    const response = await apiClient.post(`/api/processing/classify/${noteId}`)
+    const response = await apiClient.post(`/processing/classify/${noteId}`)
     return response.data
   },
 
@@ -45,7 +45,7 @@ const processingService = {
    * Get classification results for a note
    */
   async getClassification(noteId: string): Promise<TextClassification | null> {
-    const response = await apiClient.get(`/api/processing/classification/${noteId}`)
+    const response = await apiClient.get(`/processing/classification/${noteId}`)
     return response.data
   },
 
@@ -53,7 +53,7 @@ const processingService = {
    * Cancel a processing job (if still pending)
    */
   async cancelJob(jobId: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete(`/api/processing/${jobId}`)
+    const response = await apiClient.delete(`/processing/${jobId}`)
     return response.data
   }
 }
