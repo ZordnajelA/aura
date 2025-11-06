@@ -135,6 +135,8 @@ class TextClassifier(BaseProcessor):
             # Create classification prompt
             prompt = f"""Analyze and classify the following text content.
 
+IMPORTANT: Respond in English only, regardless of the input language. All summaries, key points, tasks, and suggestions must be in English.
+
 Text to classify:
 {text}
 
